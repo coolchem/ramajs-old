@@ -7,26 +7,20 @@
  */
 'use strict';
 
-rama.group.extend("vGroup", function(){
+rama.Group.extend("VGroup", function(){
 
 
 });
 
-
-rama.group.extend("hGroup", function(){
-
-
-});
-
-rama.group.extend("hGroup", function(){
+rama.Group.extend("HGroup", function(){
 
 
 });
 
-rama.group.extend("dataGroup", function(){
+rama.Group.extend("DataGroup", function(){
 
 });
 
-rama.skinnableComponent.extend("list", function(){
+rama.SkinnableComponent.extend("list", function(){
 
 });

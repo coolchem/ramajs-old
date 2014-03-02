@@ -2,56 +2,17 @@
 (function(window, document, GLOBAL) {'use strict';
 
     var applicationsDictionary = {};
-    var RX_APPLICATION = "RX-APPLICATION";
+
+    var skinCache = {};
+
+    var R_APP = "rApp";
     var RX_LAYOUT = "LAYOUT";
     var RX_STATES = "STATES";
+    var R_COMP = "rComp";
     var Class;
-    var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
-    var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
     var rama = window.rama = {
 
-    };
-    Object.prototype.define = function (properties) {
-        if (Object.isExtensible(this)) {
-            var keys = Object.keys(properties);
-            var length = keys.length;
-            var descriptors = {};
-
-            for (var i = 0; i < length; i++) {
-                var key = keys[i];
-
-                var descriptor = Object.getOwnPropertyDescriptor(properties, key);
-
-                if (/^_/.test(key)) {
-                    descriptor.enumerable = false;
-                    key = key.slice(1);
-                }
-
-                if (/_$/.test(key)) {
-                    descriptor.configurable = false;
-                    key = key.slice(0, -1);
-                }
-
-                if (descriptor.hasOwnProperty("value") && /^[0-9A-Z_]+$/.test(key)) {
-                    descriptor.writable = false;
-
-                    var words = key.toLowerCase().split("_");
-                    var number = words.length;
-
-                    for (var j = 1; j < number; j++) {
-                        var word = words[j];
-                        words[j] = word.charAt(0).toUpperCase() + word.slice(1);
-                    }
-
-                    key = words.join("");
-                }
-
-                descriptors[key] = descriptor;
-            }
-
-            Object.defineProperties(this, descriptors);
-        }
     };
 
     (function(){
@@ -174,10 +135,12 @@
             this.application = new appClass();
 
             this.application.applicationManager = this;
-
+            this.application.htmlNode = this.applicationNode;
             this.application.initialize();
 
             $(this.applicationNode).append(this.application);
+
+            this.application.inValidate();
 
         }
 
@@ -185,6 +148,7 @@
 
     Class.extend("Component", function(){
 
+        this.initialized = false;
 
         this.super = function()
         {
@@ -194,129 +158,9 @@
         this.$$super = function(){
 
             extend(this, $('<div></div>'));
-            this.css("position", "absolute");
         };
 
-
-        var width = 0;
-        this.define({
-            get width() {
-                return width;
-            },
-            set width(value) {
-                width = value;
-            }
-        });
-
-        var height = 0;
-        this.define({
-            get height() {
-                return height;
-            },
-            set height(value) {
-                height = value;
-            }
-        });
-
-        var minWidth = 0;
-        this.define({
-            get minWidth() {
-                return minWidth;
-            },
-            set minWidth(value) {
-                minWidth = value;
-            }
-        });
-
-        var minHeight = 0;
-        this.define({
-            get minHeight() {
-                return minHeight;
-            },
-            set minHeight(value) {
-                minHeight = value;
-            }
-        });
-
-        var top = 0;
-        this.define({
-            get top() {
-                return top;
-            },
-            set width(value) {
-                top = value;
-            }
-        });
-
-        var bottom = 0;
-        this.define({
-            get bottom() {
-                return bottom;
-            },
-            set bottom(value) {
-                bottom = value;
-            }
-        });
-
-        var left = 0;
-        this.define({
-            get left() {
-                return left;
-            },
-            set left(value) {
-                left = value;
-            }
-        });
-
-        var right = 0;
-        this.define({
-            get right() {
-                return right;
-            },
-            set right(value) {
-                right = value;
-            }
-        });
-
-        var paddingLeft = 0;
-        this.define({
-            get paddingLeft() {
-                return paddingLeft;
-            },
-            set paddingLeft(value) {
-                paddingLeft = value;
-            }
-        });
-
-        var paddingRight = 0;
-        this.define({
-            get paddingRight() {
-                return paddingRight;
-            },
-            set paddingRight(value) {
-                paddingRight = value;
-            }
-        });
-
-        var paddingTop = 0;
-        this.define({
-            get paddingTop() {
-                return paddingTop;
-            },
-            set paddingTop(value) {
-                paddingTop = value;
-            }
-        });
-
-        var paddingBottom = 0;
-        this.define({
-            get paddingBottom() {
-                return paddingBottom;
-            },
-            set paddingBottom(value) {
-                paddingBottom = value;
-            }
-        });
+        this.htmlNode = null;
 
         this.parent = null;
         this.elements = [];
@@ -324,13 +168,19 @@
 
         this.initialize = function(){
 
+           this.initialized  = true;
+        };
+
+        this.inValidate = function(){
 
         };
 
         this.addElement = function(element){
 
             this.elements.push(element);
-            element.initialize();
+            if(!element.initialized)
+                element.initialize();
+
             this.append(element);
         };
 
@@ -338,119 +188,129 @@
 
         };
 
+
+
     });
 
-    rama.Component.extend("group", function(){
+    rama.Component.extend("Group", function(){
+
         this.layout = null;
+        this.states = [];
+
+        this.$$super = function(){
+
+            this._super();
+            this.css("position", "absolute");
+        };
+
+        this.initialize = function(){
+
+            this._super();
+
+            if(this.htmlNode)
+            {
+                //applying attributes
+                applyAttributes(this, this.htmlNode.attributes);
+
+                for(var i=0; i<this.htmlNode.childNodes.length; i++)
+                {
+                    var childNode = this.htmlNode.childNodes[i];
+                    if(childNode.tagName === RX_LAYOUT)
+                    {
+                        setLayout(this, childNode);
+                    }
+                    else if(childNode.tagName === RX_STATES)
+                    {
+                        setStates(this, childNode);
+                    }
+                    else if(childNode.nodeType !== 3)
+                    {
+                        var elementClass = rama[$(childNode).attr(R_COMP)];
+                        if(elementClass)
+                        {
+                            var element =  new elementClass();
+                            element.htmlNode = childNode;
+                            this.addElement(element);
+                        }
+                        else
+                        {   var element2 = new rama.Component();
+                            this.addElement(element2);
+                        }
+                    }
+                }
+            }
+        };
+
+        this.inValidate = function(){
+
+            this._super();
+        };
+    });
+
+    rama.Group.extend("Skin", function(){
 
     });
 
-    rama.group.extend("skin", function(){
-        this.skinStates = [];
-    });
+    rama.Component.extend("SkinnableComponent", function(){
 
-    rama.Component.extend("skinnableComponent", function(){
-
+        var inValidating = false;
         this.skinParts = [];
-        this.skin = null;
+        var _skin = "";
 
+        var skinElement = null;
+
+
+        this.initialize = function(){
+
+            this._super();
+           _skin = this.skin;
+           attachSkin(this);
+           findSkinParts();
+        };
 
         this.partAdded = function(partName, instance){
 
         };
 
-    });
+        var attachSkin = function (_this){
 
-    rama.skinnableComponent.extend("skinnableContainer", function(){
+            if(_skin.indexOf(".html") !== -1)
+            {
+                $.get(_skin, function(data) {
 
+                    if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
+                    {
+                        skinElement = new rama.Skin();
+                        skinElement.htmlNode = data.childNodes[0];
+                        _this.addElement(skinElement);
+                        applyAttributes(skinElement, _this.htmlNode);
 
-    });
+                        if(inValidating)
+                        {
+                            skinElement.inValidate();
+                            inValidating = false;
+                        }
+                    }
 
-    rama.Component.extend("Application", function(){
+                });
+            }
+        };
 
-        this.applicationManager = null;
-    });
+        this.inValidate = function(){
 
-
-
-    Class.extend("Layout", function()
-    {
-        this.target = null;
-
-        this.updateLayout = function(){
+            this._super();
+            if(skinElement)
+            {
+                skinElement.inValidate();
+                inValidating = false;
+            }
+            else
+                inValidating = true;
 
         };
-    });
 
-    function initApplications(){
-
-        var appNodes = document.getElementsByTagName(RX_APPLICATION);
-
-        for(var i=0; i< appNodes.length; i++)
-        {
-            var appNode = appNodes[i];
-            var application = rama[appNode.id];
-
-            if(application)
-            {
-                initApplication(application, appNode)
-            }
-        }
-
-    }
-
-    function initApplication(application, appNode){
-
-       var applicationManager = new ApplicationManager(application, appNode);
-       applicationManager.initialize();
-
-    }
-
-
-
-    //Display center manage, add, update and delete of components
-
-    function constructComponent(component)
-    {
-        if(component.skin && component.skin !== "")
-        {
-            component.skinElement = $(component.skin);
-            //applying attributes
-            applyAttributes(component, component.skinElement[0].attributes);
-
-            //finding layout
-            for(var i=0; i<component.skinElement[0].childNodes.length; i++)
-            {
-                var childNode = component.skinElement[0].childNodes[i];
-                if(childNode.tagName === RX_LAYOUT)
-                {
-                    setLayout(component, childNode);
-                }
-                else if(childNode.tagName === RX_STATES)
-                {
-                    setStates(component, childNode);
-                }
-                else
-                {
-                    var elementClass = rama[camelCase(childNode.tagName.toLowerCase())];
-                    if(elementClass)
-                    {
-                        var element =  new elementClass();
-                        component.addElement(element);
-                        applyAttributes(element,childNode.attributes);
-
-                    }
-                    else
-                    {   var element2 = new rama.Component();
-                        element2.html(childNode.outerHTML);
-                        component.addElement(element2);
-                        applyAttributes(element2, childNode.attributes);
-                    }
-                }
-            }
-
-            //apply skinParts
-            if(component.skinParts)
+        function findSkinParts(){
+/*            if(component.skinParts)
             {
                 for(var j=0; j< component.skinParts.length; j++)
                 {
@@ -472,9 +332,56 @@
                         console.log("Required Skin part not found")
                     }
                 }
+            }*/
+        }
+
+    });
+
+    rama.SkinnableComponent.extend("SkinnableContainer", function(){
+
+
+    });
+
+    rama.SkinnableComponent.extend("Application", function(){
+
+        this.applicationManager = null;
+    });
+
+
+
+    Class.extend("Layout", function()
+    {
+        this.target = null;
+
+        this.updateLayout = function(){
+
+        };
+    });
+
+    function initApplications(){
+
+        var appNodes = $(document).find('[' + R_APP + ']');
+
+        for(var i=0; i< appNodes.length; i++)
+        {
+            var appNode = $(appNodes[i]);
+            var application = rama[appNode.attr(R_APP)];
+
+            if(application)
+            {
+                initApplication(application, appNode)
             }
         }
+
     }
+
+    function initApplication(application, appNode){
+
+       var applicationManager = new ApplicationManager(application, appNode);
+       applicationManager.initialize();
+
+    }
+
 
     function setLayout(component, layoutNode)
     {
@@ -520,12 +427,22 @@
         return destination;
     }
 
-    function camelCase(name) {
-        return name.
-                replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
-                    return offset ? letter.toUpperCase() : letter;
-                }).
-                replace(MOZ_HACK_REGEXP, 'Moz$1');
+    function cleanWhitespace(node)
+    {
+        for (var i=0; i<node.childNodes.length; i++)
+        {
+            var child = node.childNodes[i];
+            if(child.nodeType == 3 && !/\S/.test(child.nodeValue))
+            {
+                node.removeChild(child);
+                i--;
+            }
+            if(child.nodeType == 1)
+            {
+                cleanWhitespace(child);
+            }
+        }
+        return node;
     }
 
     function isString(value){return typeof value == 'string';}

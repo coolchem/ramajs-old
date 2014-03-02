@@ -7,7 +7,36 @@
  */
 'use strict';
 
-rama.Layout.extend("verticalLayout", function(){
+rama.Layout.extend("VerticalLayout", function(){
+
+    var verticalAlignOptions = {TOP:"top", BOTTOM:"bottom", MIDDLE:"middle"};
+
+    var horizontalAlignOptions = {LEFT:"left", RIGHT:"right", CENTER:"center", JUSTIFY:"justify"};
+
+
+    this.verticalAlign = 0;
+
+    this.horizontalAlign = 0;
+
+
+    this.gap = 6;
+
+    this.paddingLeft = 0;
+
+    this.paddingRight = 0;
+
+    this.paddingTop = 0;
+
+    this.paddingBottom = 0;
+
+    this.updateLayout = function(){
+
+    }
+
+});
+
+
+rama.Layout.extend("horizontalLayout", function(){
 
     this.updateLayout = function(){
 
