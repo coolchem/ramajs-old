@@ -1,5 +1,16 @@
-
-(function(window, document, GLOBAL) {'use strict';
+/**
+ * RamaJS JavaScript Framework v1.0
+ * DEVELOPED BY
+ * Varun Reddy Nalagatla
+ * varun8686@gmail.com
+ *
+ * Copyright 2014 Varun Reddy Nalagatla a.k.a coolchem
+ * Released under the MIT license
+ *
+ * FORK:
+ * https://github.com/coolchem/rama
+ */
+(function(window, document) {'use strict';
 
     var applicationsDictionary = {};
 
@@ -9,6 +20,7 @@
     var RX_LAYOUT = "LAYOUT";
     var RX_STATES = "STATES";
     var R_COMP = "rComp";
+    var COMP_ID = "compId";
     var Class;
 
     var rama = window.rama = {
@@ -133,22 +145,20 @@
         this.initialize = function(){
 
             this.application = new appClass();
-
             this.application.applicationManager = this;
             this.application.htmlNode = this.applicationNode;
             this.application.initialize();
-
-            $(this.applicationNode).append(this.application);
-
             this.application.inValidate();
-
         }
 
     }
 
     Class.extend("Component", function(){
 
+        this.compId = null;
+        this.rComp = "";
         this.initialized = false;
+        this.htmlNode = null;
 
         this.super = function()
         {
@@ -157,14 +167,7 @@
 
         this.$$super = function(){
 
-            extend(this, $('<div></div>'));
         };
-
-        this.htmlNode = null;
-
-        this.parent = null;
-        this.elements = [];
-
 
         this.initialize = function(){
 
@@ -177,74 +180,66 @@
 
         this.addElement = function(element){
 
-            this.elements.push(element);
-            if(!element.initialized)
-                element.initialize();
-
-            this.append(element);
         };
 
         this.removeElement = function(element){
 
         };
 
-
-
     });
 
     rama.Component.extend("Group", function(){
 
-        this.layout = null;
-        this.states = [];
-
         this.$$super = function(){
 
             this._super();
-            this.css("position", "absolute");
+            $.extend(this, $("<div></div>"))
         };
 
         this.initialize = function(){
 
             this._super();
+            createChildren(this);
 
-            if(this.htmlNode)
-            {
-                //applying attributes
-                applyAttributes(this, this.htmlNode.attributes);
+        };
 
-                for(var i=0; i<this.htmlNode.childNodes.length; i++)
-                {
-                    var childNode = this.htmlNode.childNodes[i];
-                    if(childNode.tagName === RX_LAYOUT)
-                    {
-                        setLayout(this, childNode);
-                    }
-                    else if(childNode.tagName === RX_STATES)
-                    {
-                        setStates(this, childNode);
-                    }
-                    else if(childNode.nodeType !== 3)
-                    {
-                        var elementClass = rama[$(childNode).attr(R_COMP)];
-                        if(elementClass)
-                        {
-                            var element =  new elementClass();
-                            element.htmlNode = childNode;
-                            this.addElement(element);
-                        }
-                        else
-                        {   var element2 = new rama.Component();
-                            this.addElement(element2);
-                        }
-                    }
-                }
-            }
+        this.addElement = function(element){
+
+            if(!element.initialized) //too see if its a framework component
+                element.initialize();
+
+            this.append(element);
         };
 
         this.inValidate = function(){
-
             this._super();
         };
+
+        function createChildren(_this)
+        {
+            if(_this.htmlNode)
+            {
+                _this.html(_this.htmlNode.html());
+
+                applyAttributes(_this, _this.htmlNode[0].attributes);
+                //find and compile custom components if available
+
+                var customComponents = _this.find('[' + R_COMP + ']');
+
+                for( var i= 0; i< customComponents.length; i++)
+                {
+                    var customComponentNode = $(customComponents[i]);
+
+                    var customComponentClass = rama[customComponentNode.attr(R_COMP)];
+                    if(customComponentClass)
+                    {
+                        var custComp = new customComponentClass();
+                        custComp.htmlNode = customComponentNode;
+                        custComp.initialize();
+                    }
+                }
+            }
+        }
     });
 
     rama.Group.extend("Skin", function(){
@@ -260,12 +255,17 @@
         var skinElement = null;
 
 
+        this.$$super = function(){
+
+            this._super();
+        };
+
+
         this.initialize = function(){
 
             this._super();
            _skin = this.skin;
            attachSkin(this);
-           findSkinParts();
         };
 
         this.partAdded = function(partName, instance){
@@ -281,19 +281,30 @@
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
                         skinElement = new rama.Skin();
-                        skinElement.htmlNode = data.childNodes[0];
+                        skinElement.htmlNode = $(data.childNodes[0]);
                         _this.addElement(skinElement);
-                        applyAttributes(skinElement, _this.htmlNode);
+                        skinElement.addClass(_this.htmlNode.attr("class"));
 
                         if(inValidating)
                         {
                             skinElement.inValidate();
                             inValidating = false;
                         }
+
+                        findSkinParts(_this);
+
                     }
 
                 });
             }
+        };
+
+        this.addElement = function(element){
+
+            if(!element.initialized) //too see if its a framework component
+                element.initialize();
+
+            this.htmlNode.append(element);
         };
 
         this.inValidate = function(){
@@ -309,22 +320,21 @@
 
         };
 
-        function findSkinParts(){
-/*            if(component.skinParts)
+        function findSkinParts(_this){
+            if(skinElement)
             {
-                for(var j=0; j< component.skinParts.length; j++)
+                for(var j=0; j< _this.skinParts.length; j++)
                 {
-                    var skinPart = component.skinParts[j];
+                    var skinPart = _this.skinParts[j];
                     var skinPartFound = false;
-                    for (var k=0; k< component.elements.length; k++)
+
+                    var dynamicElements = _this.htmlNode.find('[' + COMP_ID + '=' +skinPart.id + ']');
+
+                    if(dynamicElements.length>0)
                     {
-                        var skinElement1 = component.elements[k];
-                        if(skinElement1.id === skinPart.id)
-                        {
-                            skinPartFound = true;
-                            component[skinPart.id] = skinElement1;
-                            break;
-                        }
+                      skinPartFound = true;
+                      _this[skinPart.id] = dynamicElements[0];
+                      _this.partAdded(skinPart.id,dynamicElements[0])
                     }
 
                     if(skinPart.required === true && !skinPartFound)
@@ -332,7 +342,7 @@
                         console.log("Required Skin part not found")
                     }
                 }
-            }*/
+            }
         }
 
     });
@@ -421,12 +431,6 @@
         }
     }
 
-    function extend(destination, source) {
-        for (var property in source)
-            destination[property] = source[property];
-        return destination;
-    }
-
     function cleanWhitespace(node)
     {
         for (var i=0; i<node.childNodes.length; i++)
@@ -452,4 +456,4 @@
     });
 
 
-})(window, document, this);
+})(window, document);

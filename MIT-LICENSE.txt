@@ -1,4 +1,4 @@
-Copyright 2012 Varun Reddy Nalagatla a.k.a coolchem
+Copyright 2014 Varun Reddy Nalagatla a.k.a coolchem
 
 https://github.com/coolchem/rama
 

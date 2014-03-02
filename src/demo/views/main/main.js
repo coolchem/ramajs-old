@@ -6,12 +6,11 @@
  * To change this template use File | Settings | File Templates.
  */
 
-rama.SkinnableComponent.extend("mainComponent", function(){
+rama.SkinnableComponent.extend("MainComponent", function(){
 
-    this.skin = '/views/main/skins/mainComponentSkin.html';
+    this.skin = 'views/main/skins/mainComponentSkin.html';
 
-    this.skinParts = [{id:'mainModuleNavigator',required:true},
-        {id:'mainModuleNavigationContainer',required:true}];
+    this.skinParts = [];
 
 
     this.mainModuleNavigator = null;

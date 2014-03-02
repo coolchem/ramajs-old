@@ -11,13 +11,38 @@
 rama.Application.extend('testApplication', function application()
 {
 
-   //this.skin = "appSkin.html";
    this.super = function(){
       this.skin = "appSkin.html";
    };
-   this.skinParts = [{id:'testButton',required:true}];
 
+   this.skinParts = [{id:'testButton',required:true}, {id:'mainComponent', required:true}];
    this.mainComponent = null;
+   this.testButton = null;
+
+   var mainComponent = null;
+   var testButton = null;
+
+    this.partAdded = function(partName, instance){
+
+        this._super(partName, instance);
+
+        if(instance === this.testButton)
+        {
+            testButton = this.testButton;
+            this.testButton.addEventListener('click', handleTestButtonClick)
+        }
+
+        if(instance === this.mainComponent)
+        {
+            mainComponent = this.mainComponent;
+        }
+
+    };
+
+    function handleTestButtonClick(){
+
+       mainComponent.style.display = "none";
+    }
 
 });
 
