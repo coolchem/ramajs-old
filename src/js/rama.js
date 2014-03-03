@@ -51,8 +51,6 @@
          *
          * @method extend
          * @param {String} className
-         * @param {Object} properties - hash of properties (init will be the constructor)
-         * @param {Object} [classMethods] - optional class methods to add to the class
          */
         Class.extend = function(className, classConstructor) {
             /* No name, don't add onto Q */
@@ -85,6 +83,23 @@
                 };
             }
 
+            function _getSetsuperFactory(name,fn,source) {
+                return function() {
+                    var tmp = this._super;
+
+                    /* Add a new ._super() method that is the same method */
+                    /* but on the super-class */
+                    this._super = source[name];
+
+                    /* The method only need to be bound temporarily, so we */
+                    /* remove it when we're done executing */
+                    var ret = fn.apply(this, arguments);
+                    this._super = tmp;
+
+                    return ret;
+                };
+            }
+
 
             var constructorInstance = new classConstructor();
 
@@ -95,7 +110,28 @@
                 }
                 else
                 {
-                    prototype[name] = constructorInstance[name];
+                    var propertyDescriptor =  Object.getOwnPropertyDescriptor(constructorInstance,name);
+                    if( propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
+                    {
+                        var newPrototypeDescripter = {};
+                        for(var descriptorName in propertyDescriptor)
+                        {
+                            if(typeof propertyDescriptor[descriptorName] === "function" )
+                            {
+                                newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName,propertyDescriptor[descriptorName],propertyDescriptor)
+                            }
+                            else
+                            {
+                                newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
+                            }
+                        }
+                        Object.defineProperty(prototype,name, newPrototypeDescripter);
+                    }
+                    else
+                    {
+                        prototype[name] = constructorInstance[name];
+                    }
+
                 }
             }
 
@@ -122,7 +158,6 @@
             RClass.extend = Class.extend;
 
             if(className) {
-                /* Save the class onto Q */
                 rama[className] = RClass;
 
                 /* Let the class know its name */
@@ -248,23 +283,20 @@
 
     rama.Component.extend("SkinnableComponent", function(){
 
-        var inValidating = false;
+        this._inValidating = false;
         this.skinParts = [];
-        var _skin = "";
 
-        var skinElement = null;
-
+        this._skinElement = null;
+        this._skin = "";
 
         this.$$super = function(){
-
             this._super();
         };
 
 
         this.initialize = function(){
-
-            this._super();
-           _skin = this.skin;
+           this._super();
+           this._skin = this.skin;
            attachSkin(this);
         };
 
@@ -272,23 +304,23 @@
 
         };
 
-        var attachSkin = function (_this){
+        function attachSkin(_this){
 
-            if(_skin.indexOf(".html") !== -1)
+            if(_this._skin.indexOf(".html") !== -1)
             {
-                $.get(_skin, function(data) {
+                $.get(_this._skin, function(data) {
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
-                        skinElement = new rama.Skin();
-                        skinElement.htmlNode = $(data.childNodes[0]);
-                        _this.addElement(skinElement);
-                        skinElement.addClass(_this.htmlNode.attr("class"));
+                        _this._skinElement = new rama.Skin();
+                        _this._skinElement.htmlNode = $(data.childNodes[0]);
+                        _this.addElement(_this._skinElement);
+                        _this._skinElement.addClass(_this.htmlNode.attr("class"));
 
-                        if(inValidating)
+                        if(_this._inValidating)
                         {
-                            skinElement.inValidate();
-                            inValidating = false;
+                            _this._skinElement.inValidate();
+                            _this._inValidating = false;
                         }
 
                         findSkinParts(_this);
@@ -297,7 +329,7 @@
 
                 });
             }
-        };
+        }
 
         this.addElement = function(element){
 
@@ -310,18 +342,18 @@
         this.inValidate = function(){
 
             this._super();
-            if(skinElement)
+            if(_this._skinElement)
             {
-                skinElement.inValidate();
-                inValidating = false;
+                _this._skinElement.inValidate();
+                _this._inValidating = false;
             }
             else
-                inValidating = true;
+                _this._inValidating = true;
 
         };
 
         function findSkinParts(_this){
-            if(skinElement)
+            if(_this._skinElement)
             {
                 for(var j=0; j< _this.skinParts.length; j++)
                 {
@@ -339,7 +371,7 @@
 
                     if(skinPart.required === true && !skinPartFound)
                     {
-                        console.log("Required Skin part not found")
+                        throw new TypeError("Required Skin part not found");
                     }
                 }
             }
