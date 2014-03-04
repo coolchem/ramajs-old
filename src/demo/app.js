@@ -38,8 +38,11 @@ rama.Application.extend('testApplication', function application()
 
 
    this.super = function(){
-      this.skin = "appSkin.html";
+      this._super.super();
+
    };
+
+    this.skin = "appSkin.html";
 
     this.skinParts = [{id:'testButton',required:true}, {id:'mainComponent', required:true}];
 
@@ -47,7 +50,7 @@ rama.Application.extend('testApplication', function application()
 
     this.partAdded = function(partName, instance){
 
-        this._super(partName, instance);
+        this._super.partAdded(partName, instance);
 
         if(instance === this.testButton)
         {

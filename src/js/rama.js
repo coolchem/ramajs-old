@@ -23,151 +23,80 @@
     var COMP_ID = "compId";
     var Class;
 
+
+
     var rama = window.rama = {
 
     };
 
-    (function(){
-        var initializing = false;
-        /** The base Class implementation (does nothing)
-         *
-         * @constructor
-         * @for Class
-         */
-        Class = function(){};
+    Class = function(){};
 
-        /**
-         * See if a object is a specific class
-         *
-         * @method isA
-         * @param {String} className - class to check against
-         */
-        Class.prototype.isA = function(className) {
-            return this.className === className;
+    Class.extend = function(classname, constructor)
+    {
+        var thisClass = this;
+        var newClass = function(){
+            var baseClass = thisClass;
+            var subClass = constructor;
+            var className = classname;
+
+            var constructedClass = constructClass(baseClass, subClass, className);
+
+            if (constructedClass.super) {
+                constructedClass.super.apply(constructedClass, arguments);
+            }
+
+            if (constructedClass.$$super) {
+                constructedClass.$$super.apply(constructedClass, arguments);
+            }
+
+            return constructedClass;
         };
 
-        /**
-         * Create a new Class that inherits from this class
-         *
-         * @method extend
-         * @param {String} className
-         */
-        Class.extend = function(className, classConstructor) {
-            /* No name, don't add onto Q */
-            if(!isString(className)) {
-                className = null;
+        newClass.baseClass = this;
+        newClass.subClass = constructor;
+        newClass.extend = Class.extend;
+
+        if(classname)
+        {
+            rama[classname] = newClass;
+        }
+    };
+
+    function constructClass(baseClass, subClass, subClassName)
+    {
+        var baseObject = new baseClass();
+
+        subClass.prototype =  baseObject;
+        subClass.prototype.className = subClassName;
+
+        var subObject = new subClass();
+
+        function _superFactory(name,fn) {
+            return function() {
+                var tmp = this._super;
+
+                /* Add a new ._super() method that is the same method */
+                /* but on the super-class */
+                this._super = baseObject[name];
+
+                /* The method only need to be bound temporarily, so we */
+                /* remove it when we're done executing */
+                var ret = fn.apply(this, arguments);
+                this._super = tmp;
+
+                return ret;
+            };
+        }
+
+/*        for (var name in subObject) {
+            if(typeof subObject[name] === "function" && typeof baseObject[name] === "function")
+            {
+                subObject[name]._super = subClass.prototype;
             }
-            var _super = this.prototype,
-            ThisClass = this;
-
-            /* Instantiate a base class (but only create the instance, */
-            /* don't run the init constructor) */
-            initializing = true;
-            var prototype = new ThisClass();
-            initializing = false;
-
-            function _superFactory(name,fn) {
-                return function() {
-                    var tmp = this._super;
-
-                    /* Add a new ._super() method that is the same method */
-                    /* but on the super-class */
-                    this._super = _super[name];
-
-                    /* The method only need to be bound temporarily, so we */
-                    /* remove it when we're done executing */
-                    var ret = fn.apply(this, arguments);
-                    this._super = tmp;
-
-                    return ret;
-                };
-            }
-
-            function _getSetsuperFactory(name,fn,source) {
-                return function() {
-                    var tmp = this._super;
-
-                    /* Add a new ._super() method that is the same method */
-                    /* but on the super-class */
-                    this._super = source[name];
-
-                    /* The method only need to be bound temporarily, so we */
-                    /* remove it when we're done executing */
-                    var ret = fn.apply(this, arguments);
-                    this._super = tmp;
-
-                    return ret;
-                };
-            }
-
-
-            var constructorInstance = new classConstructor();
-
-            for (var name in constructorInstance) {
-                if(typeof constructorInstance[name] === "function" && typeof _super[name] === "function")
-                {
-                    prototype[name] = _superFactory(name,constructorInstance[name])
-                }
-                else
-                {
-                    var propertyDescriptor =  Object.getOwnPropertyDescriptor(constructorInstance,name);
-                    if( propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
-                    {
-                        var newPrototypeDescripter = {};
-                        for(var descriptorName in propertyDescriptor)
-                        {
-                            if(typeof propertyDescriptor[descriptorName] === "function" )
-                            {
-                                newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName,propertyDescriptor[descriptorName],propertyDescriptor)
-                            }
-                            else
-                            {
-                                newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
-                            }
-                        }
-                        Object.defineProperty(prototype,name, newPrototypeDescripter);
-                    }
-                    else
-                    {
-                        prototype[name] = constructorInstance[name];
-                    }
-
-                }
-            }
-
-            /* The dummy class constructor */
-            function RClass() {
-                if ( !initializing && this.super ) {
-                    this.super.apply(this, arguments);
-                }
-
-                if ( !initializing && this.$$super ) {
-                    this.$$super.apply(this, arguments);
-                }
-            }
-
-            /* Populate our constructed prototype object */
-            RClass.prototype = prototype;
-
-
-
-
-            /* Enforce the constructor to be what we expect */
-            RClass.prototype.constructor = classConstructor;
-            /* And make this class extendable */
-            RClass.extend = Class.extend;
-
-            if(className) {
-                rama[className] = RClass;
-
-                /* Let the class know its name */
-                RClass.prototype.className = className;
-                RClass.className = className;
-            }
-
-            return RClass;
-        };
-    }());
+        }*/
+        subObject._super = subClass.prototype;
+        return subObject;
+    }
 
     function ApplicationManager(applicationClass, rootNode){
 
@@ -227,13 +156,13 @@
 
         this.$$super = function(){
 
-            this._super();
+            this._super.$$super();
             $.extend(this, $("<div></div>"))
         };
 
         this.initialize = function(){
 
-            this._super();
+            this._super.initialize();
             createChildren(this);
 
         };
@@ -247,7 +176,7 @@
         };
 
         this.inValidate = function(){
-            this._super();
+            this._super.inValidate();
         };
 
         function createChildren(_this)
@@ -287,16 +216,28 @@
         this.skinParts = [];
 
         this._skinElement = null;
-        this._skin = "";
+
+        var _skin;
+
+        Object.defineProperty(this, "skin",
+                {   get : function(){
+                    return _skin;
+                },
+                    set : function(newValue){
+                        _skin = newValue;
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
+
 
         this.$$super = function(){
-            this._super();
+            this._super.$$super();
         };
 
 
         this.initialize = function(){
-           this._super();
-           this._skin = this.skin;
+           this._super.initialize();
            attachSkin(this);
         };
 
@@ -306,9 +247,9 @@
 
         function attachSkin(_this){
 
-            if(_this._skin.indexOf(".html") !== -1)
+            if(_skin.indexOf(".html") !== -1)
             {
-                $.get(_this._skin, function(data) {
+                $.get(_skin, function(data) {
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
@@ -341,14 +282,14 @@
 
         this.inValidate = function(){
 
-            this._super();
-            if(_this._skinElement)
+            this._super.inValidate();
+            if(this._skinElement)
             {
-                _this._skinElement.inValidate();
-                _this._inValidating = false;
+                this._skinElement.inValidate();
+                this._inValidating = false;
             }
             else
-                _this._inValidating = true;
+                this._inValidating = true;
 
         };
 
@@ -487,5 +428,57 @@
         initApplications();
     });
 
+
+
+    Class.extend("baseClass", function(){
+
+        var testProperty = "humm";
+        Object.defineProperty(this, "testProperty",
+                {   get : function(){
+                    return testProperty;
+                },
+                    set : function(newValue){
+                        testProperty = newValue;
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
+
+        this.initialize = function()
+        {
+            console.log("baseClass");
+        }
+
+    });
+
+    rama.baseClass.extend("subClass1", function(){
+
+        this.testProperty = "subClass1Test";
+
+        this.initialize = function()
+        {
+            this._super.initialize();
+            console.log("subClass1");
+        }
+
+    });
+
+    rama.baseClass.extend("subClass2", function(){
+
+        this.initialize = function()
+        {
+            this._super.initialize();
+            console.log("subClass2");
+        }
+
+    });
+
+    var sub1 = new rama.subClass1();
+    var sub2 = new rama.subClass2();
+    console.log(sub1.testProperty);
+    console.log(sub2.testProperty);
+
+    sub1.initialize();
+    sub2.initialize();
 
 })(window, document);

@@ -9,6 +9,7 @@
 rama.SkinnableComponent.extend("MainComponent", function(){
 
     this.skin = 'views/main/skins/mainComponentSkin.html';
+    this.skin1 = "views/main/skins/mainComponentSkin.html";
 
     this.skinParts = [];
 
@@ -18,7 +19,7 @@ rama.SkinnableComponent.extend("MainComponent", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super(partName, instance);
+        this._super.partAdded(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)
@@ -45,7 +46,7 @@ rama.list.extend("moduleNavigator", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super(partName, instance);
+        this._super.partAdded(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)
@@ -72,7 +73,7 @@ rama.SkinnableComponent.extend("moduleNavigationContainer", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super(partName, instance);
+        this._super.partAdded(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)
