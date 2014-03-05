@@ -19,7 +19,7 @@ rama.SkinnableComponent.extend("MainComponent", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super.partAdded(partName, instance);
+        this._super(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)
@@ -46,7 +46,7 @@ rama.list.extend("moduleNavigator", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super.partAdded(partName, instance);
+        this._super(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)
@@ -73,7 +73,7 @@ rama.SkinnableComponent.extend("moduleNavigationContainer", function(){
 
     this.partAdded = function(partName, instance)
     {
-        this._super.partAdded(partName, instance);
+        this._super(partName, instance);
         if(instance === this.mainModuleNavigator)
         {
             this.mainModuleNavigator.on("changeModule", handleChangeModule)

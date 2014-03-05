@@ -29,74 +29,146 @@
 
     };
 
-    Class = function(){};
+    (function(){
 
-    Class.extend = function(classname, constructor)
-    {
-        var thisClass = this;
-        var newClass = function(){
-            var baseClass = thisClass;
-            var subClass = constructor;
-            var className = classname;
+        var initializing = false;
 
-            var constructedClass = constructClass(baseClass, subClass, className);
+        Class = function(){};
 
-            if (constructedClass.super) {
-                constructedClass.super.apply(constructedClass, arguments);
+        Class.extend = function(classname, constructor)
+        {
+            var thisClass = this;
+            var newClass = function(){
+                var baseClass = thisClass;
+                var subClass = constructor;
+                var className = classname;
+
+                var constructedClass = constructClass(baseClass, subClass, className);
+
+/*                if (!initializing && constructedClass.super) {
+                    constructedClass.super.apply(constructedClass, arguments);
+                }
+
+                if (!initializing && constructedClass.$$super) {
+                    constructedClass.$$super.apply(constructedClass, arguments);
+                }*/
+
+                return constructedClass;
+            };
+            newClass.extend = Class.extend;
+
+            if(classname)
+            {
+                rama[classname] = newClass;
             }
 
-            if (constructedClass.$$super) {
-                constructedClass.$$super.apply(constructedClass, arguments);
-            }
-
-            return constructedClass;
+            return newClass;
         };
 
-        newClass.baseClass = this;
-        newClass.subClass = constructor;
-        newClass.extend = Class.extend;
-
-        if(classname)
+        function constructClass(baseClass, subClass, subClassName)
         {
-            rama[classname] = newClass;
-        }
-    };
+            var _super = new baseClass();
+            initializing = true;
+            var baseObject = new baseClass();
+            initializing = false;
 
-    function constructClass(baseClass, subClass, subClassName)
-    {
-        var baseObject = new baseClass();
 
-        subClass.prototype =  baseObject;
-        subClass.prototype.className = subClassName;
+            function _superFactory(name,fn) {
+                return function() {
+                    var tmp = this._super;
 
-        var subObject = new subClass();
+                    /* Add a new ._super() method that is the same method */
+                    /* but on the super-class */
+                    this._super = _super[name];
 
-        function _superFactory(name,fn) {
-            return function() {
-                var tmp = this._super;
+                    /* The method only need to be bound temporarily, so we */
+                    /* remove it when we're done executing */
+                    var ret = fn.apply(this, arguments);
+                    this._super = tmp;
 
-                /* Add a new ._super() method that is the same method */
-                /* but on the super-class */
-                this._super = baseObject[name];
-
-                /* The method only need to be bound temporarily, so we */
-                /* remove it when we're done executing */
-                var ret = fn.apply(this, arguments);
-                this._super = tmp;
-
-                return ret;
-            };
-        }
-
-/*        for (var name in subObject) {
-            if(typeof subObject[name] === "function" && typeof baseObject[name] === "function")
-            {
-                subObject[name]._super = subClass.prototype;
+                    return ret;
+                };
             }
-        }*/
-        subObject._super = subClass.prototype;
-        return subObject;
-    }
+
+            function _getSetsuperFactory(name,fn,source) {
+                return function() {
+                    var tmp = this._super;
+
+                    /* Add a new ._super() method that is the same method */
+                    /* but on the super-class */
+                    this._super = source[name];
+
+                    /* The method only need to be bound temporarily, so we */
+                    /* remove it when we're done executing */
+                    var ret = fn.apply(this, arguments);
+                    this._super = tmp;
+
+                    return ret;
+                };
+            }
+
+
+            var constructorInstance = new subClass();
+
+            for (var name in constructorInstance) {
+                if(typeof constructorInstance[name] === "function" && typeof _super[name] === "function")
+                {
+                    baseObject[name] = _superFactory(name,constructorInstance[name])
+                }
+                else
+                {
+                    var propertyDescriptor =  Object.getOwnPropertyDescriptor(constructorInstance,name);
+                    if( propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
+                    {
+                        var newPrototypeDescripter = {};
+                        for(var descriptorName in propertyDescriptor)
+                        {
+                            if(typeof propertyDescriptor[descriptorName] === "function" )
+                            {
+                                newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName,propertyDescriptor[descriptorName],propertyDescriptor)
+                            }
+                            else
+                            {
+                                newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
+                            }
+                        }
+                        Object.defineProperty(baseObject,name, newPrototypeDescripter);
+                    }
+                    else
+                    {
+                        baseObject[name] = constructorInstance[name];
+                    }
+
+                }
+            }
+
+            /* The dummy class constructor */
+            function RClass() {
+                if ( !initializing && this.super ) {
+                    this.super.apply(this, arguments);
+                }
+
+                if ( !initializing && this.$$super ) {
+                    this.$$super.apply(this, arguments);
+                }
+            }
+
+            /* Populate our constructed prototype object */
+            RClass.prototype = baseObject;
+
+            /* Enforce the constructor to be what we expect */
+            RClass.prototype.constructor = subClass;
+
+            RClass.className = subClassName;
+
+            return new RClass();
+        }
+
+    }());
+
+
+
+
 
     function ApplicationManager(applicationClass, rootNode){
 
@@ -122,7 +194,20 @@
         this.compId = null;
         this.rComp = "";
         this.initialized = false;
-        this.htmlNode = null;
+
+        var htmlNode;
+
+        Object.defineProperty(this, "skin",
+                {   get : function(){
+                    return htmlNode;
+                },
+                    set : function(newValue){
+                        htmlNode = newValue;
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
+
 
         this.super = function()
         {
@@ -156,13 +241,13 @@
 
         this.$$super = function(){
 
-            this._super.$$super();
-            $.extend(this, $("<div></div>"))
+            this._super();
+            $.extend(this, $("<div></div>"));
         };
 
         this.initialize = function(){
 
-            this._super.initialize();
+            this._super();
             createChildren(this);
 
         };
@@ -176,7 +261,7 @@
         };
 
         this.inValidate = function(){
-            this._super.inValidate();
+            this._super();
         };
 
         function createChildren(_this)
@@ -232,12 +317,12 @@
 
 
         this.$$super = function(){
-            this._super.$$super();
+            this._super();
         };
 
 
         this.initialize = function(){
-           this._super.initialize();
+           this._super();
            attachSkin(this);
         };
 
@@ -282,7 +367,7 @@
 
         this.inValidate = function(){
 
-            this._super.inValidate();
+            this._super();
             if(this._skinElement)
             {
                 this._skinElement.inValidate();

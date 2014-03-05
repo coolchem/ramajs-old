@@ -38,7 +38,7 @@ rama.Application.extend('testApplication', function application()
 
 
    this.super = function(){
-      this._super.super();
+      this._super();
 
    };
 
@@ -50,7 +50,7 @@ rama.Application.extend('testApplication', function application()
 
     this.partAdded = function(partName, instance){
 
-        this._super.partAdded(partName, instance);
+        this._super(partName, instance);
 
         if(instance === this.testButton)
         {
@@ -65,6 +65,12 @@ rama.Application.extend('testApplication', function application()
     };
 
     function handleTestButtonClick(){
+
+        if(mainComponent.style.display === "none")
+        {
+            mainComponent.style.display = "";
+            return;
+        }
 
        mainComponent.style.display = "none";
     }
