@@ -12,25 +12,25 @@ rama.Application.extend('testApplication', function application()
 {
 
     var mainComponent;
-
     Object.defineProperty(this, "mainComponent",
-    {   get : function(){
-            return mainComponent;
-        },
-        set : function(newValue){
-            mainComponent = newValue;
-        },
-        enumerable : true,
-        configurable : true
-    });
-
-    var testButton;
-    Object.defineProperty(this, "testButton",
             {   get : function(){
-                return testButton;
+                return mainComponent;
             },
                 set : function(newValue){
-                    testButton = newValue;
+                    mainComponent = newValue;
+                },
+                enumerable : true,
+                configurable : true
+            });
+
+
+    var contentGroup;
+    Object.defineProperty(this, "contentGroup",
+            {   get : function(){
+                return contentGroup;
+            },
+                set : function(newValue){
+                    contentGroup = newValue;
                 },
                 enumerable : true,
                 configurable : true
@@ -44,7 +44,8 @@ rama.Application.extend('testApplication', function application()
 
     this.skin = "appSkin.html";
 
-    this.skinParts = [{id:'testButton',required:true}, {id:'mainComponent', required:true}];
+    this.skinParts = [{id:'testButton',required:true}, {id:'mainComponent', required:true},
+                     {id:'contentGroup'}];
 
 
 
@@ -59,7 +60,7 @@ rama.Application.extend('testApplication', function application()
 
         if(instance === this.mainComponent)
         {
-
+           console.log(mainComponent);
         }
 
     };
@@ -73,6 +74,12 @@ rama.Application.extend('testApplication', function application()
         }
 
        mainComponent.style.display = "none";
+
+      if(contentGroup)
+      {
+          var mainComp = new rama.MainComponent();
+          contentGroup.addElement(mainComp);
+      }
     }
 
 });

@@ -16,11 +16,11 @@
 
     var skinCache = {};
 
-    var R_APP = "rApp";
+    var R_APP = "rapp";
     var RX_LAYOUT = "LAYOUT";
     var RX_STATES = "STATES";
-    var R_COMP = "rComp";
-    var COMP_ID = "compId";
+    var R_COMP = "rcomp";
+    var COMP_ID = "compid";
     var Class;
 
 
@@ -45,14 +45,6 @@
 
                 var constructedClass = constructClass(baseClass, subClass, className);
 
-/*                if (!initializing && constructedClass.super) {
-                    constructedClass.super.apply(constructedClass, arguments);
-                }
-
-                if (!initializing && constructedClass.$$super) {
-                    constructedClass.$$super.apply(constructedClass, arguments);
-                }*/
-
                 return constructedClass;
             };
             newClass.extend = Class.extend;
@@ -67,8 +59,9 @@
 
         function constructClass(baseClass, subClass, subClassName)
         {
-            var _super = new baseClass();
+
             initializing = true;
+            var _super = new baseClass();
             var baseObject = new baseClass();
             initializing = false;
 
@@ -191,23 +184,11 @@
 
     Class.extend("Component", function(){
 
-        this.compId = null;
-        this.rComp = "";
+        this.compid = "";
+        this.rcomp = "";
         this.initialized = false;
-
-        var htmlNode;
-
-        Object.defineProperty(this, "skin",
-                {   get : function(){
-                    return htmlNode;
-                },
-                    set : function(newValue){
-                        htmlNode = newValue;
-                    },
-                    enumerable : true,
-                    configurable : true
-                });
-
+        this.isCustomElement = true;
+        this.htmlNode = null;
 
         this.super = function()
         {
@@ -216,6 +197,7 @@
 
         this.$$super = function(){
 
+            $.extend(this, $("<div></div>")); //every component starts of as empty div
         };
 
         this.initialize = function(){
@@ -239,22 +221,18 @@
 
     rama.Component.extend("Group", function(){
 
-        this.$$super = function(){
-
-            this._super();
-            $.extend(this, $("<div></div>"));
-        };
+        this.customComponents = [];
 
         this.initialize = function(){
 
             this._super();
             createChildren(this);
-
+            this.htmlNode.replaceWith(this);
         };
 
         this.addElement = function(element){
 
-            if(!element.initialized) //too see if its a framework component
+            if(!element.initialized && element.isCustomElement === true) //too see if its a framework component
                 element.initialize();
 
             this.append(element);
@@ -269,6 +247,12 @@
             if(_this.htmlNode)
             {
                 _this.html(_this.htmlNode.html());
+
+                var attributes = _this.htmlNode.prop("attributes");
+
+                $.each(attributes, function() {
+                    _this.attr(this.name, this.value);
+                });
 
                 applyAttributes(_this, _this.htmlNode[0].attributes);
                 //find and compile custom components if available
@@ -285,6 +269,8 @@
                         var custComp = new customComponentClass();
                         custComp.htmlNode = customComponentNode;
                         custComp.initialize();
+                        //customComponentNode.replaceWith(custComp);
+                        _this.customComponents.push(custComp);
                     }
                 }
             }
@@ -293,14 +279,39 @@
 
     rama.Group.extend("Skin", function(){
 
+        this.getSkinPart = function(compId){
+
+            var element = null;
+
+            if(this.customComponents && this.customComponents.length > 0)
+            {
+                for (var i = 0; i< this.customComponents.length ; i++)
+                {
+                    var customComp = this.customComponents[i];
+                    if(customComp[COMP_ID] === compId)
+                    {
+                        return customComp;
+                    }
+                }
+            }
+
+            var dynamicElements = this.find('[' + COMP_ID + '=' + compId + ']');
+
+            if(dynamicElements && dynamicElements.length > 0)
+            {
+                return dynamicElements[0];
+            }
+
+            return element;
+        }
     });
 
     rama.Component.extend("SkinnableComponent", function(){
 
-        this._inValidating = false;
+        var _inValidating = false;
         this.skinParts = [];
 
-        this._skinElement = null;
+        var _skinElement = null;
 
         var _skin;
 
@@ -314,11 +325,6 @@
                     enumerable : true,
                     configurable : true
                 });
-
-
-        this.$$super = function(){
-            this._super();
-        };
 
 
         this.initialize = function(){
@@ -338,66 +344,68 @@
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
-                        _this._skinElement = new rama.Skin();
-                        _this._skinElement.htmlNode = $(data.childNodes[0]);
-                        _this.addElement(_this._skinElement);
-                        _this._skinElement.addClass(_this.htmlNode.attr("class"));
+                        _skinElement = new rama.Skin();
+                        _skinElement.htmlNode = $(data.childNodes[0]);
 
-                        if(_this._inValidating)
+                        _skinElement.initialize();
+
+                        if(_this.htmlNode)
                         {
-                            _this._skinElement.inValidate();
-                            _this._inValidating = false;
+                            _skinElement.addClass(_this.htmlNode.attr("class"));
+                            _this.htmlNode.append(_skinElement);
+                        }
+                        else
+                        {
+                            _this.append(_skinElement);
+                        }
+
+
+                        if(_inValidating)
+                        {
+                            _skinElement.inValidate();
+                            _inValidating = false;
                         }
 
                         findSkinParts(_this);
-
                     }
 
                 });
             }
         }
 
-        this.addElement = function(element){
-
-            if(!element.initialized) //too see if its a framework component
-                element.initialize();
-
-            this.htmlNode.append(element);
-        };
-
         this.inValidate = function(){
 
             this._super();
-            if(this._skinElement)
+            if(_skinElement)
             {
-                this._skinElement.inValidate();
-                this._inValidating = false;
+                _skinElement.inValidate();
+                _inValidating = false;
             }
             else
-                this._inValidating = true;
+                _inValidating = true;
 
         };
 
         function findSkinParts(_this){
-            if(_this._skinElement)
+            if(_skinElement)
             {
                 for(var j=0; j< _this.skinParts.length; j++)
                 {
                     var skinPart = _this.skinParts[j];
                     var skinPartFound = false;
 
-                    var dynamicElements = _this.htmlNode.find('[' + COMP_ID + '=' +skinPart.id + ']');
+                    var skinPartElement = _skinElement.getSkinPart(skinPart.id);
 
-                    if(dynamicElements.length>0)
+                    if(skinPartElement)
                     {
                       skinPartFound = true;
-                      _this[skinPart.id] = dynamicElements[0];
-                      _this.partAdded(skinPart.id,dynamicElements[0])
+                      _this[skinPart.id] = skinPartElement;
+                      _this.partAdded(skinPart.id,skinPartElement)
                     }
 
                     if(skinPart.required === true && !skinPartFound)
                     {
-                        throw new TypeError("Required Skin part not found");
+                        throw new TypeError("Required Skin part not found " + _this.skin);
                     }
                 }
             }
