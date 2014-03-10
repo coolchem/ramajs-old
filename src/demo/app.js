@@ -60,7 +60,7 @@ rama.Application.extend('testApplication', function application()
 
         if(instance === this.mainComponent)
         {
-           console.log(mainComponent);
+
         }
 
     };

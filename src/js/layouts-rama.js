@@ -7,7 +7,7 @@
  */
 'use strict';
 
-rama.Layout.extend("VerticalLayout", function(){
+rama.Layout.extend("verticalLayout", function(){
 
     var verticalAlignOptions = {TOP:"top", BOTTOM:"bottom", MIDDLE:"middle"};
 
@@ -31,6 +31,7 @@ rama.Layout.extend("VerticalLayout", function(){
 
     this.updateLayout = function(){
 
+        this._super();
     }
 
 });

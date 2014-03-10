@@ -22,6 +22,8 @@
     var R_COMP = "rcomp";
     var COMP_ID = "compid";
     var Class;
+    var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
+    var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
 
 
@@ -227,7 +229,8 @@
 
             this._super();
             createChildren(this);
-            this.htmlNode.replaceWith(this);
+            if(this.htmlNode)
+                this.htmlNode.replaceWith(this);
         };
 
         this.addElement = function(element){
@@ -240,6 +243,12 @@
 
         this.inValidate = function(){
             this._super();
+
+            if(this.layout)
+            {
+                this.css("position", "absolute");
+                this.layout.updateLayout();
+            }
         };
 
         function createChildren(_this)
@@ -255,23 +264,34 @@
                 });
 
                 applyAttributes(_this, _this.htmlNode[0].attributes);
-                //find and compile custom components if available
+            }
 
-                var customComponents = _this.find('[' + R_COMP + ']');
 
-                for( var i= 0; i< customComponents.length; i++)
+            //find if any layout is specified
+            var layoutNode =  _this[0].getElementsByTagName(RX_LAYOUT);
+            if(layoutNode && layoutNode.length > 0)
+            {
+                _this.layout = null;
+                setLayout(_this, layoutNode[0]);
+
+            }
+
+            //find and compile custom components if available
+
+            var customComponents = _this.find('[' + R_COMP + ']');
+
+            for( var i= 0; i< customComponents.length; i++)
+            {
+                var customComponentNode = $(customComponents[i]);
+
+                var customComponentClass = rama[customComponentNode.attr(R_COMP)];
+                if(customComponentClass)
                 {
-                    var customComponentNode = $(customComponents[i]);
-
-                    var customComponentClass = rama[customComponentNode.attr(R_COMP)];
-                    if(customComponentClass)
-                    {
-                        var custComp = new customComponentClass();
-                        custComp.htmlNode = customComponentNode;
-                        custComp.initialize();
-                        //customComponentNode.replaceWith(custComp);
-                        _this.customComponents.push(custComp);
-                    }
+                    var custComp = new customComponentClass();
+                    custComp.htmlNode = customComponentNode;
+                    custComp.initialize();
+                    //customComponentNode.replaceWith(custComp);
+                    _this.customComponents.push(custComp);
                 }
             }
         }
@@ -305,6 +325,33 @@
             return element;
         }
     });
+
+    Class.extend("Layout", function()
+    {
+        this.target = null;
+
+        this.updateLayout = function(){
+
+           console.log(this.target);
+        };
+    });
+
+    function setLayout(component, layoutNode)
+    {
+        if(layoutNode.childNodes && layoutNode.childNodes.length > 0)
+        {
+            layoutNode = cleanWhitespace(layoutNode);
+            var layoutTypeNode = layoutNode.childNodes[0];
+            var layout = rama[camelCase(layoutTypeNode.tagName.toLowerCase())];
+            if(layout)
+            {
+                component.layout = new layout();
+                component.layout.target = component;
+                applyAttributes(component.layout, layoutTypeNode.attributes)
+            }
+        }
+    }
+
 
     rama.Component.extend("SkinnableComponent", function(){
 
@@ -344,34 +391,41 @@
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
-                        _skinElement = new rama.Skin();
-                        _skinElement.htmlNode = $(data.childNodes[0]);
-
-                        _skinElement.initialize();
-
-                        if(_this.htmlNode)
-                        {
-                            _skinElement.addClass(_this.htmlNode.attr("class"));
-                            _this.htmlNode.append(_skinElement);
-                        }
-                        else
-                        {
-                            _this.append(_skinElement);
-                        }
-
-
-                        if(_inValidating)
-                        {
-                            _skinElement.inValidate();
-                            _inValidating = false;
-                        }
-
-                        findSkinParts(_this);
+                        compileSkin($(data.childNodes[0]));
                     }
 
                 });
             }
+
+            function compileSkin(skinNode)
+            {
+                _skinElement = new rama.Skin();
+                _skinElement.htmlNode = skinNode;
+
+                _skinElement.initialize();
+
+                if(_this.htmlNode)
+                {
+                    _skinElement.addClass(_this.htmlNode.attr("class"));
+                    _this.htmlNode.append(_skinElement);
+                }
+                else
+                {
+                    _this.append(_skinElement);
+                }
+
+
+                if(_inValidating)
+                {
+                    _skinElement.inValidate();
+                    _inValidating = false;
+                }
+
+                findSkinParts(_this);
+            }
         }
+
+
 
         this.inValidate = function(){
 
@@ -423,17 +477,6 @@
         this.applicationManager = null;
     });
 
-
-
-    Class.extend("Layout", function()
-    {
-        this.target = null;
-
-        this.updateLayout = function(){
-
-        };
-    });
-
     function initApplications(){
 
         var appNodes = $(document).find('[' + R_APP + ']');
@@ -459,17 +502,6 @@
     }
 
 
-    function setLayout(component, layoutNode)
-    {
-        if(layoutNode.childNodes && layoutNode.childNodes.length > 0)
-        {
-            var layoutTypeNode = layoutNode.childNodes[0];
-            var layout = rama[camelCase(layoutTypeNode.tagName.toLowerCase())];
-
-            component.layout = new layout();
-        }
-
-    }
 
     function setStates(component, statesNode)
     {
@@ -488,13 +520,21 @@
 
     }
 
-    function applyAttributes(component, attrs)
+    function applyAttributes(object, attrs)
     {
         for(var i=0; i< attrs.length; i++)
         {
             var attr = attrs[i];
-            component[attr.name] = attr.value;
+            object[camelCase(attr.name.toLowerCase())] = attr.value;
         }
+    }
+
+    function camelCase(name) {
+        return name.
+                replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
+                    return offset ? letter.toUpperCase() : letter;
+                }).
+                replace(MOZ_HACK_REGEXP, 'Moz$1');
     }
 
     function cleanWhitespace(node)
