@@ -25,7 +25,7 @@
     var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
     var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
-
+    var skinPartDictionary = {};
 
     var rama = window.rama = {
 
@@ -165,32 +165,13 @@
 
 
 
-    function ApplicationManager(applicationClass, rootNode){
-
-        var appClass = applicationClass;
-
-        this.application = null;
-        this.applicationNode = rootNode;
-
-
-        this.initialize = function(){
-
-            this.application = new appClass();
-            this.application.applicationManager = this;
-            this.application.htmlNode = this.applicationNode;
-            this.application.initialize();
-            this.application.inValidate();
-        }
-
-    }
-
     Class.extend("Component", function(){
 
         this.compid = "";
         this.rcomp = "";
         this.initialized = false;
-        this.isCustomElement = true;
-        this.htmlNode = null;
+
+        this.elements = [];
 
         this.super = function()
         {
@@ -223,77 +204,56 @@
 
     rama.Component.extend("Group", function(){
 
-        this.customComponents = [];
+        var _htmlContent = [];
+        Object.defineProperty(this, "htmlContent",
+                {   get : function(){
+                    return _htmlContent;
+                },
+                    set : function(newValue){
+                        _htmlContent = newValue;
+                        setHTMLContent(this);
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
 
         this.initialize = function(){
 
             this._super();
             createChildren(this);
-            if(this.htmlNode)
-                this.htmlNode.replaceWith(this);
         };
 
         this.addElement = function(element){
 
-            if(!element.initialized && element.isCustomElement === true) //too see if its a framework component
-                element.initialize();
-
+            element.initialize();
+            this.elements.push(element);
             this.append(element);
         };
 
         this.inValidate = function(){
             this._super();
-
-            if(this.layout)
-            {
-                this.css("position", "absolute");
-                this.layout.updateLayout();
-            }
         };
 
         function createChildren(_this)
         {
-            if(_this.htmlNode)
-            {
-                _this.html(_this.htmlNode.html());
+           if(_this.htmlContent.length > 0)
+           {
+               for(var i = 0; i< _this.htmlContent.length; i++)
+               {
+                   var componentClass = $(_this.htmlContent[i]).attr(R_COMP);
+                   var comp = createComponent(_this.htmlContent[i],rama[componentClass]);
+                   _this.addElement(comp);
+               }
+           }
+        }
 
-                var attributes = _this.htmlNode.prop("attributes");
-
-                $.each(attributes, function() {
-                    _this.attr(this.name, this.value);
-                });
-
-                applyAttributes(_this, _this.htmlNode[0].attributes);
-            }
-
-
-            //find if any layout is specified
-            var layoutNode =  _this[0].getElementsByTagName(RX_LAYOUT);
-            if(layoutNode && layoutNode.length > 0)
-            {
-                _this.layout = null;
-                setLayout(_this, layoutNode[0]);
-
-            }
-
-            //find and compile custom components if available
-
-            var customComponents = _this.find('[' + R_COMP + ']');
-
-            for( var i= 0; i< customComponents.length; i++)
-            {
-                var customComponentNode = $(customComponents[i]);
-
-                var customComponentClass = rama[customComponentNode.attr(R_COMP)];
-                if(customComponentClass)
-                {
-                    var custComp = new customComponentClass();
-                    custComp.htmlNode = customComponentNode;
-                    custComp.initialize();
-                    //customComponentNode.replaceWith(custComp);
-                    _this.customComponents.push(custComp);
-                }
-            }
+        function setHTMLContent(_this)
+        {
+          if(_this.initialized)
+          {
+              _this[0].innerHTML = "";
+              createChildren(_this);
+          }
         }
     });
 
@@ -303,23 +263,13 @@
 
             var element = null;
 
-            if(this.customComponents && this.customComponents.length > 0)
-            {
-                for (var i = 0; i< this.customComponents.length ; i++)
-                {
-                    var customComp = this.customComponents[i];
-                    if(customComp[COMP_ID] === compId)
-                    {
-                        return customComp;
-                    }
-                }
-            }
-
             var dynamicElements = this.find('[' + COMP_ID + '=' + compId + ']');
+            var skinPartDictionaryElement = skinPartDictionary[compId];
 
-            if(dynamicElements && dynamicElements.length > 0)
+            if( skinPartDictionaryElement && dynamicElements && dynamicElements.length > 0)
             {
-                return dynamicElements[0];
+                if(skinPartDictionaryElement[0] === dynamicElements[0])
+                    return skinPartDictionaryElement;
             }
 
             return element;
@@ -335,6 +285,61 @@
            console.log(this.target);
         };
     });
+
+    function createComponent(node,componentClass)
+    {
+        var component = null;
+
+        if(componentClass !== undefined && componentClass != null && componentClass !== "")
+        {
+            component = new componentClass();
+        }
+        else
+        {
+            component = new rama.Group();
+            component[0] = node;
+        }
+
+        //applying node attributes
+
+        if(node.attributes !== undefined && node.attributes.length > 0)
+        {
+            $.each(node.attributes, function() {
+                component.attr(this.name, this.value);
+            });
+
+            applyAttributes(component, node.attributes);
+        }
+
+
+
+        //setting up html content
+
+        var children = $(node).children();
+
+        if(children !== undefined && children.length > 0)
+        {
+            //setting innerHTML to empty so that children are created through normal process
+            component[0].innerHTML = "";
+            for(var i=0; i< children.length; i++)
+            {
+                var childNode = children[i];
+                component.htmlContent.push(childNode);
+            }
+        }
+
+        registerSkinPart(component);
+
+        return component;
+    }
+
+    function registerSkinPart(component)
+    {
+        if(component.attr(COMP_ID) && component.attr(COMP_ID) !== "")
+        {
+            skinPartDictionary[component.attr(COMP_ID)] = component;
+        }
+    }
 
     function setLayout(component, layoutNode)
     {
@@ -356,7 +361,6 @@
     rama.Component.extend("SkinnableComponent", function(){
 
         var _inValidating = false;
-        this.skinParts = [];
 
         var _skinElement = null;
 
@@ -373,11 +377,31 @@
                     configurable : true
                 });
 
+        var _skinParts = [];
+        Object.defineProperty(this, "skinParts",
+                {   get : function(){
+                    return _skinParts;
+                },
+                    set : function(newValue){
+                        defineSkinParts(newValue);
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
+
 
         this.initialize = function(){
            this._super();
            attachSkin(this);
         };
+
+        function defineSkinParts(skinPartss){
+
+            for (var i = 0; i < skinPartss.length; i++) {
+                _skinParts.push(skinPartss[i]);
+            }
+
+        }
 
         this.partAdded = function(partName, instance){
 
@@ -385,35 +409,36 @@
 
         function attachSkin(_this){
 
-            if(_skin.indexOf(".html") !== -1)
+            if(_this.skin.indexOf(".html") !== -1)
             {
-                $.get(_skin, function(data) {
+
+                /*var skinNode = $(getRemoteSkin(_this.skin))[0];
+                compileSkin(skinNode);*/
+
+                $.get(_this.skin, function(data) {
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
-                        compileSkin($(data.childNodes[0]));
+                        //creating temp div to get proper element objects from html string;
+                        var tempDiv = $("<div></div>");
+                        tempDiv.html(data.childNodes[0].outerHTML);
+                        compileSkin(tempDiv.children()[0]);
                     }
 
                 });
+
+            }
+            else
+            {
+                compileSkin($(_this.skin));
             }
 
             function compileSkin(skinNode)
             {
-                _skinElement = new rama.Skin();
-                _skinElement.htmlNode = skinNode;
 
+                _skinElement = createComponent(skinNode, rama.Skin);
                 _skinElement.initialize();
-
-                if(_this.htmlNode)
-                {
-                    _skinElement.addClass(_this.htmlNode.attr("class"));
-                    _this.htmlNode.append(_skinElement);
-                }
-                else
-                {
-                    _this.append(_skinElement);
-                }
-
+                _this.append(_skinElement);
 
                 if(_inValidating)
                 {
@@ -459,7 +484,7 @@
 
                     if(skinPart.required === true && !skinPartFound)
                     {
-                        throw new TypeError("Required Skin part not found " + _this.skin);
+                        throw new TypeError("Required Skin part not found: " + skinPart.id + " in " +_this.skin );
                     }
                 }
             }
@@ -469,6 +494,40 @@
 
     rama.SkinnableComponent.extend("SkinnableContainer", function(){
 
+        var _htmlContent = [];
+        Object.defineProperty(this, "htmlContent",
+                {   get : function(){
+                    return _htmlContent;
+                },
+                    set : function(newValue){
+                        _htmlContent = newValue;
+                    },
+                    enumerable : true,
+                    configurable : true
+                });
+
+        this.skin = '<div rcomp="Skin">' +
+                '<div rcomp="Group" compid="contentGroup">' +
+                '</div>' +
+                '</div>';
+
+        this.skinParts = [{id:'contentGroup', required:true}];
+
+        this.contentGroup = null;
+
+        this.initialize = function(){
+            this._super();
+        };
+
+        this.partAdded = function(partName, instance){
+
+            this._super(partName, instance);
+
+            if(instance === this.contentGroup)
+            {
+                this.contentGroup.htmlContent = this.htmlContent;
+            }
+        };
 
     });
 
@@ -501,6 +560,24 @@
 
     }
 
+    function ApplicationManager(applicationClass, rootNode){
+
+        var appClass = applicationClass;
+
+        this.application = null;
+        this.applicationNode = rootNode;
+
+
+        this.initialize = function(){
+
+            this.application = createComponent(rootNode[0], appClass);
+            this.application.applicationManager = this;
+            rootNode.replaceWith(this.application);
+            this.application.initialize();
+            this.application.inValidate();
+        }
+
+    }
 
 
     function setStates(component, statesNode)
@@ -556,6 +633,15 @@
     }
 
     function isString(value){return typeof value == 'string';}
+
+    function getRemoteSkin(skinURL) {
+        return $.ajax({
+            type: "GET",
+            url: skinURL,
+            async: false
+        }).responseText;
+    }
+
 
     $(document).ready(function() {
         initApplications();

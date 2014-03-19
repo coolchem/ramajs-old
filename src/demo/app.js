@@ -11,30 +11,6 @@
 rama.Application.extend('testApplication', function application()
 {
 
-    var mainComponent;
-    Object.defineProperty(this, "mainComponent",
-            {   get : function(){
-                return mainComponent;
-            },
-                set : function(newValue){
-                    mainComponent = newValue;
-                },
-                enumerable : true,
-                configurable : true
-            });
-
-
-    var contentGroup;
-    Object.defineProperty(this, "contentGroup",
-            {   get : function(){
-                return contentGroup;
-            },
-                set : function(newValue){
-                    contentGroup = newValue;
-                },
-                enumerable : true,
-                configurable : true
-            });
 
 
    this.super = function(){
@@ -44,43 +20,10 @@ rama.Application.extend('testApplication', function application()
 
     this.skin = "appSkin.html";
 
-    this.skinParts = [{id:'testButton',required:true}, {id:'mainComponent', required:true},
-                     {id:'contentGroup'}];
+    this.skinParts = [{id:'mainComponent', required:true}];
 
+    this.mainComponent = null;
 
-
-    this.partAdded = function(partName, instance){
-
-        this._super(partName, instance);
-
-        if(instance === this.testButton)
-        {
-            this.testButton.addEventListener('click', handleTestButtonClick)
-        }
-
-        if(instance === this.mainComponent)
-        {
-
-        }
-
-    };
-
-    function handleTestButtonClick(){
-
-        if(mainComponent.style.display === "none")
-        {
-            mainComponent.style.display = "";
-            return;
-        }
-
-       mainComponent.style.display = "none";
-
-      if(contentGroup)
-      {
-          var mainComp = new rama.MainComponent();
-          contentGroup.addElement(mainComp);
-      }
-    }
 
 });
 
