@@ -170,6 +170,7 @@
         this.compid = "";
         this.rcomp = "";
         this.initialized = false;
+        this.parentComponent = null;
 
         this.elements = [];
 
@@ -185,7 +186,12 @@
 
         this.initialize = function(){
 
-           this.initialized  = true;
+            if(this.initialized)
+                return;
+            this.$$createChildren();
+            this.$$childrenCreated();
+
+            this.initialized = true;
         };
 
         this.inValidate = function(){
@@ -193,12 +199,27 @@
         };
 
         this.addElement = function(element){
-
+            element.parentComponent = this;
+            element.initialize();
+            this.elements.push(element);
+            this.append(element);
         };
 
         this.removeElement = function(element){
 
+            this.remove(element);
         };
+
+
+        this.$$createChildren = function(){
+
+        };
+
+
+        this.$$childrenCreated = function(){
+
+        };
+
 
     });
 
@@ -217,42 +238,26 @@
                     configurable : true
                 });
 
-        this.initialize = function(){
+        this.$$createChildren = function(){
 
-            this._super();
-            createChildren(this);
+            if(this.htmlContent.length > 0)
+            {
+                this.$$numberOfChildrenLeftToCreate = this.htmlContent.length;
+                for(var i = 0; i< this.htmlContent.length; i++)
+                {
+                    var componentClass = $(this.htmlContent[i]).attr(R_COMP);
+                    var comp = createComponent(this.htmlContent[i],rama[componentClass]);
+                    this.addElement(comp);
+                }
+            }
         };
-
-        this.addElement = function(element){
-
-            element.initialize();
-            this.elements.push(element);
-            this.append(element);
-        };
-
-        this.inValidate = function(){
-            this._super();
-        };
-
-        function createChildren(_this)
-        {
-           if(_this.htmlContent.length > 0)
-           {
-               for(var i = 0; i< _this.htmlContent.length; i++)
-               {
-                   var componentClass = $(_this.htmlContent[i]).attr(R_COMP);
-                   var comp = createComponent(_this.htmlContent[i],rama[componentClass]);
-                   _this.addElement(comp);
-               }
-           }
-        }
 
         function setHTMLContent(_this)
         {
           if(_this.initialized)
           {
               _this[0].innerHTML = "";
-              createChildren(_this);
+              _this.$$createChildren();
           }
         }
     });
@@ -285,53 +290,6 @@
            console.log(this.target);
         };
     });
-
-    function createComponent(node,componentClass)
-    {
-        var component = null;
-
-        if(componentClass !== undefined && componentClass != null && componentClass !== "")
-        {
-            component = new componentClass();
-        }
-        else
-        {
-            component = new rama.Group();
-            component[0] = node;
-        }
-
-        //applying node attributes
-
-        if(node.attributes !== undefined && node.attributes.length > 0)
-        {
-            $.each(node.attributes, function() {
-                component.attr(this.name, this.value);
-            });
-
-            applyAttributes(component, node.attributes);
-        }
-
-
-
-        //setting up html content
-
-        var children = $(node).children();
-
-        if(children !== undefined && children.length > 0)
-        {
-            //setting innerHTML to empty so that children are created through normal process
-            component[0].innerHTML = "";
-            for(var i=0; i< children.length; i++)
-            {
-                var childNode = children[i];
-                component.htmlContent.push(childNode);
-            }
-        }
-
-        registerSkinPart(component);
-
-        return component;
-    }
 
     function registerSkinPart(component)
     {
@@ -389,12 +347,6 @@
                     configurable : true
                 });
 
-
-        this.initialize = function(){
-           this._super();
-           attachSkin(this);
-        };
-
         function defineSkinParts(skinPartss){
 
             for (var i = 0; i < skinPartss.length; i++) {
@@ -403,19 +355,25 @@
 
         }
 
-        this.partAdded = function(partName, instance){
-
+        this.$$createChildren = function(){
+          attachSkin(this);
         };
+
+        this.$$childrenCreated = function(){
+            this._super();
+            findSkinParts(this);
+        };
+
 
         function attachSkin(_this){
 
             if(_this.skin.indexOf(".html") !== -1)
             {
 
-                /*var skinNode = $(getRemoteSkin(_this.skin))[0];
-                compileSkin(skinNode);*/
+                var skinNode = $(getRemoteSkin(_this.skin))[0];
+                compileSkin(skinNode);
 
-                $.get(_this.skin, function(data) {
+/*                $.get(_this.skin, function(data) {
 
                     if(data.childNodes && data.childNodes[0] && $(data.childNodes[0]).attr(R_COMP) === "Skin")
                     {
@@ -425,7 +383,7 @@
                         compileSkin(tempDiv.children()[0]);
                     }
 
-                });
+                });*/
 
             }
             else
@@ -437,18 +395,22 @@
             {
 
                 _skinElement = createComponent(skinNode, rama.Skin);
-                _skinElement.initialize();
-                _this.append(_skinElement);
+                _this.addElement(_skinElement);
 
                 if(_inValidating)
                 {
                     _skinElement.inValidate();
                     _inValidating = false;
                 }
-
-                findSkinParts(_this);
             }
         }
+
+
+
+        this.partAdded = function(partName, instance){
+             //Override this method to add functionality to various skin component
+        };
+
 
 
 
@@ -515,10 +477,6 @@
 
         this.contentGroup = null;
 
-        this.initialize = function(){
-            this._super();
-        };
-
         this.partAdded = function(partName, instance){
 
             this._super(partName, instance);
@@ -535,6 +493,55 @@
 
         this.applicationManager = null;
     });
+
+
+    function createComponent(node,componentClass)
+    {
+        var component = null;
+
+        if(componentClass !== undefined && componentClass != null && componentClass !== "")
+        {
+            component = new componentClass();
+        }
+        else
+        {
+            component = new rama.Group();
+            component[0] = node;
+        }
+
+        //applying node attributes
+
+        if(node.attributes !== undefined && node.attributes.length > 0)
+        {
+            $.each(node.attributes, function() {
+                component.attr(this.name, this.value);
+            });
+
+            applyAttributes(component, node.attributes);
+        }
+
+
+
+        //setting up html content
+
+        var children = $(node).children();
+
+        if(children !== undefined && children.length > 0)
+        {
+            //setting innerHTML to empty so that children are created through normal process
+            component[0].innerHTML = "";
+            for(var i=0; i< children.length; i++)
+            {
+                var childNode = children[i];
+                component.htmlContent.push(childNode);
+            }
+        }
+
+        registerSkinPart(component);
+
+        return component;
+    }
+
 
     function initApplications(){
 
