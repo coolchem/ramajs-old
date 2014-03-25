@@ -21,6 +21,10 @@ rama.Group.extend("DataGroup", function(){
 
 });
 
-rama.SkinnableComponent.extend("list", function(){
+rama.SkinnableContainer.extend("ViewStack", function(){
+
+});
+
+rama.SkinnableContainer.extend("List", function(){
 
 });
