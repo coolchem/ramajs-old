@@ -8,17 +8,19 @@
 
 'use strict';
 
+rama.skins(
+        {Class:'AppSkin', skinURL:"appSkin.html"}
+);
+
 rama.Application.extend('testApplication', function application()
 {
-
-
 
    this.super = function(){
       this._super();
 
    };
 
-    this.skin = "appSkin.html";
+    this.skinClass = "AppSkin";
 
     this.skinParts = [{id:'mainComponent', required:true}];
 

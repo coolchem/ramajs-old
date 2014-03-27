@@ -6,9 +6,16 @@
  * To change this template use File | Settings | File Templates.
  */
 
-rama.SkinnableContainer.extend("MainContainer", function(){
+var demoLibrary = rama.library("demoLibrary");
 
-    this.skin = 'views/main/skins/mainContainerSkin.html';
+demoLibrary.skins(
+        {Class:'MainContainerSkin', skinURL:"views/main/skins/mainContainerSkin.html"},
+        {Class:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
+);
+
+demoLibrary.SkinnableContainer.extend("MainContainer", function(){
+
+    this.skinClass =  "demoLibrary:MainContainerSkin";
 
     this.skinParts = [{id:'testButton', required:true}];
 
@@ -53,7 +60,7 @@ rama.SkinnableContainer.extend("MainContainer", function(){
 
 rama.SkinnableComponent.extend("MainComponent", function(){
 
-     this.skin = 'views/main/skins/mainComponentSkin.html';
+     this.skinClass =  "demoLibrary:MainComponentSkin";
 
      this.skinParts = [];
 
