@@ -1,26 +1,102 @@
-// Generated on 2013-09-23 using generator-angular 0.4.0
+
 'use strict';
+
+var files = require('./ramaFiles.js').files;
 
 module.exports = function(grunt) {
 
-    // Project configuration.
+    //grunt plugins
+    require('load-grunt-tasks')(grunt);
+
+    var dist = 'rama';
+
+    //config
     grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'),
-        uglify: {
+        concat: {
+            rama: {
+                src: files["rama"],
+                dest: 'build/rama.js'
+            }
+        },
+
+        connect: {
+            devserver: {
+                options: {
+                    port: 8000,
+                    hostname: '0.0.0.0',
+                    base: '.',
+                    keepalive: true
+                }
+            }
+        },
+
+
+        clean: {
+            build: ['build'],
+            tmp: ['tmp']
+        },
+
+        jshint: {
             options: {
-                banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-            },
+                jshintrc: true
+            }
+        },
+
+        build: {
+            rama: {
+                dest: 'build/rama.js',
+                //src: util.wrap([files['angularSrc']], 'angular'),
+                styles: {
+                    css: ['css/angular.css'],
+                    generateCspCssFile: true,
+                    minify: true
+                }
+            }
+        },
+
+
+        min: {
+            rama: 'build/rama.js'
+        },
+
+        "merge-conflict": {
+            files: [
+                'src/**/*',
+                'test/**/*',
+                'docs/**/*',
+                'css/**/*'
+            ]
+        },
+
+        copy: {
+
+        },
+
+
+        compress: {
             build: {
-                src: 'src/<%= pkg.name %>.js',
-                dest: 'build/<%= pkg.name %>.min.js'
+                options: {archive: 'build/' + dist +'.zip', mode: 'zip'},
+                src: ['**'], cwd: 'build', expand: true, dot: true, dest: dist + '/'
+            }
+        },
+
+        write: {
+            versionTXT: {file: 'build/version.txt', val: "test"},
+            versionJSON: {file: 'build/version.json', val: JSON.stringify("test")}
+        },
+
+        bump: {
+            options: {
+                files: ['package.json'],
+                commit: false,
+                createTag: false,
+                push: false
             }
         }
     });
 
-    // Load the plugin that provides the "uglify" task.
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-
-    // Default task(s).
-    grunt.registerTask('default', ['uglify']);
+    //alias tasks
+    grunt.registerTask('webserver', ['connect:devserver']);
+    grunt.registerTask('concatRama', ['concat:rama']);
 
 };
