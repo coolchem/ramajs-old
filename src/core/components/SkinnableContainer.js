@@ -1,33 +1,28 @@
-
-rama.SkinnableComponent.extend("SkinnableContainer", function(){
+$r("SkinnableContainer").extends($r("SkinnableComponent"))(function () {
 
     var _htmlContent = [];
     Object.defineProperty(this, "htmlContent",
-            {   get : function(){
+            {   get:function () {
                 return _htmlContent;
             },
-                set : function(newValue){
+                set:function (newValue) {
                     _htmlContent = newValue;
                 },
-                enumerable : true,
-                configurable : true
+                enumerable:true,
+                configurable:true
             });
 
-    this.skin = '<div comp="Skin">' +
-            '<div comp="Group" compid="contentGroup">' +
-            '</div>' +
-            '</div>';
-
-    this.skinParts = [{id:'contentGroup', required:true}];
+    this.skinParts = [
+        {id:'contentGroup', required:true}
+    ];
 
     this.contentGroup = null;
 
-    this.partAdded = function(partName, instance){
+    this.partAdded = function (partName, instance) {
 
         this._super(partName, instance);
 
-        if(instance === this.contentGroup)
-        {
+        if (instance === this.contentGroup) {
             this.contentGroup.htmlContent = this.htmlContent;
         }
     };

@@ -1,5 +1,4 @@
-
-rama.Component.extend("SkinnableComponent", function(){
+$r("SkinnableComponent").extends($r("Component"))(function () {
 
     var _inValidating = false;
 
@@ -7,30 +6,34 @@ rama.Component.extend("SkinnableComponent", function(){
 
     var _skinClass;
 
+    var classUtil = $r.$$classUtil;
+
+    var componentUtil = $r.$$componentUtil;
+
     Object.defineProperty(this, "skinClass",
-            {   get : function(){
+            {   get:function () {
                 return _skinClass;
             },
-                set : function(newValue){
+                set:function (newValue) {
                     _skinClass = newValue;
                 },
-                enumerable : true,
-                configurable : true
+                enumerable:true,
+                configurable:true
             });
 
     var _skinParts = [];
     Object.defineProperty(this, "skinParts",
-            {   get : function(){
+            {   get:function () {
                 return _skinParts;
             },
-                set : function(newValue){
+                set:function (newValue) {
                     defineSkinParts(newValue);
                 },
-                enumerable : true,
-                configurable : true
+                enumerable:true,
+                configurable:true
             });
 
-    function defineSkinParts(skinPartss){
+    function defineSkinParts(skinPartss) {
 
         for (var i = 0; i < skinPartss.length; i++) {
             _skinParts.push(skinPartss[i]);
@@ -38,42 +41,37 @@ rama.Component.extend("SkinnableComponent", function(){
 
     }
 
-    this.$$createChildren = function(){
+    this.$$createChildren = function () {
         attachSkin(this);
     };
 
-    this.$$childrenCreated = function(){
+    this.$$childrenCreated = function () {
         this._super();
         findSkinParts(this);
     };
 
 
-    function attachSkin(_this){
+    function attachSkin(_this) {
 
-        _skinElement = createComponent(skinFactory(_this), rama.Skin);
+        _skinElement = componentUtil.createComponent(classUtil.skinFactory(_this), $r.Class("Skin"));
         _this.addElement(_skinElement);
 
-        if(_inValidating)
-        {
+        if (_inValidating) {
             _skinElement.inValidate();
             _inValidating = false;
         }
     }
 
 
-
-    this.partAdded = function(partName, instance){
+    this.partAdded = function (partName, instance) {
         //Override this method to add functionality to various skin component
     };
 
 
-
-
-    this.inValidate = function(){
+    this.inValidate = function () {
 
         this._super();
-        if(_skinElement)
-        {
+        if (_skinElement) {
             _skinElement.inValidate();
             _inValidating = false;
         }
@@ -82,26 +80,22 @@ rama.Component.extend("SkinnableComponent", function(){
 
     };
 
-    function findSkinParts(_this){
-        if(_skinElement)
-        {
-            for(var j=0; j< _this.skinParts.length; j++)
-            {
+    function findSkinParts(_this) {
+        if (_skinElement) {
+            for (var j = 0; j < _this.skinParts.length; j++) {
                 var skinPart = _this.skinParts[j];
                 var skinPartFound = false;
 
                 var skinPartElement = _skinElement.getSkinPart(skinPart.id);
 
-                if(skinPartElement)
-                {
+                if (skinPartElement) {
                     skinPartFound = true;
                     _this[skinPart.id] = skinPartElement;
-                    _this.partAdded(skinPart.id,skinPartElement)
+                    _this.partAdded(skinPart.id, skinPartElement)
                 }
 
-                if(skinPart.required === true && !skinPartFound)
-                {
-                    throw new TypeError("Required Skin part not found: " + skinPart.id + " in " +_this.skin );
+                if (skinPart.required === true && !skinPartFound) {
+                    throw new ReferenceError("Required Skin part not found: " + skinPart.id + " in " + _this.skin);
                 }
             }
         }

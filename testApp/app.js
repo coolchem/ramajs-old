@@ -8,11 +8,11 @@
 
 'use strict';
 
-rama.skins(
+$r.skins(
         {Class:'AppSkin', skinURL:"appSkin.html"}
 );
 
-rama.Application.extend('testApplication', function application()
+$r.Application('testApplication', function()
 {
 
    this.super = function(){
@@ -20,7 +20,7 @@ rama.Application.extend('testApplication', function application()
 
    };
 
-    this.skinClass = "AppSkin";
+    this.skinClass = $r.skinClass("AppSkin");
 
     this.skinParts = [{id:'mainComponent', required:true}];
 

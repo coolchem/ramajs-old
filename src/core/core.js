@@ -1,249 +1,298 @@
+var LIBRARY_RAMA = "$r";
+var R_APP = "rapp";
 
-/**
- * RamaJS JavaScript Framework v1.0
- * DEVELOPED BY
- * Varun Reddy Nalagatla
- * varun8686@gmail.com
- *
- * Copyright 2014 Varun Reddy Nalagatla a.k.a coolchem
- * Released under the MIT license
- *
- * FORK:
- * https://github.com/coolchem/rama
- */
+var libraryDictionary = {};
 
-'use strict';
 
-(function(window, document) {'use strict';
+var library = function (libraryName) {
 
-    var LIBRARY_RAMA = "rama";
-    var R_APP = "rapp";
+    var library = libraryDictionary[libraryName];
+    if (library)
+        return library;
+    else {
+        return constructLibrary(libraryName);
+    }
+};
 
-    var libraryDictionary = {};
+//constructing core Library which is rama
+var $r = window.$r = constructLibrary(LIBRARY_RAMA);
+$r.library = library;
+$r.$$libraryDictionary = libraryDictionary;
 
-    var library = function(libraryName){
+$r.Application = function (applicationname, constructor) {
+    var newClassItem = {};
+    newClassItem.name = applicationname;
+    newClassItem.constructor = constructor;
+    newClassItem.constructor.className = applicationname;
+    newClassItem.superClassItem = $r("Application").classItem;
+    newClassItem.library = $r;
+    $r.$$classDictionary[applicationname] = newClassItem;
+};
 
-        var library = libraryDictionary[libraryName];
-        if(library)
-            return library;
-        else
-        {
-            return constructLibrary(libraryName);
+
+function initApplications() {
+
+    var appNodes = $(document).find('[' + R_APP + ']');
+
+    for (var i = 0; i < appNodes.length; i++) {
+        var appNode = $(appNodes[i]);
+        var application = $r.Class(appNode.attr(R_APP));
+
+        if (application) {
+            initApplication(application, appNode)
+        }
+    }
+
+}
+
+function initApplication(application, appNode) {
+
+    var applicationManager = new ApplicationManager(application, appNode);
+    applicationManager.initialize();
+
+}
+
+function ApplicationManager(applicationClass, rootNode) {
+
+    var appClass = applicationClass;
+
+    this.application = null;
+    this.applicationNode = rootNode;
+
+
+    this.initialize = function () {
+
+        this.application = $r.$$componentUtil.createComponent(rootNode[0], appClass);
+        this.application.applicationManager = this;
+        rootNode.replaceWith(this.application);
+        this.application.initialize();
+        this.application.inValidate();
+    }
+
+}
+
+//core functions
+function constructLibrary(libraryName) {
+
+    var library = function (className) {
+
+        var classItem = library.$$classDictionary[className];
+
+        if (classItem === null || classItem === undefined) {
+
+            //this means the class has never been register in the library so
+            //so register the Class into library
+            var newClassItem = {};
+            newClassItem.name = className;
+            newClassItem.constructor = function () {
+            };
+            newClassItem.constructor.className = className;
+            newClassItem.superClassItem = null;
+            newClassItem.library = library;
+
+            library.$$classDictionary[className] = newClassItem;
+
+
+        }
+
+        classItem = library.$$classDictionary[className];
+
+        //1.when i get class name, I need to register the class somewhere
+
+        //2.then return a function so user can register a constructor class for the given classname
+
+        //3.also the return function should have an extend function which take the argument of a return value of requesting a class name which is essentially a constructor
+
+        //4.the extend function should then register that constructor as base class for the class registered in step 2
+
+        var returnFunction = function (construcotr) {
+
+            returnFunction.classItem.constructor = construcotr;
+
+        };
+
+
+        returnFunction.extends = function (baseClassItem) {
+
+            var classItem = this.classItem;
+            var superClassItem = baseClassItem;
+            return function (constructor) {
+
+                classItem.constructor = constructor;
+                classItem.superClassItem = superClassItem.classItem;
+            };
+        };
+
+
+        returnFunction.classItem = classItem;
+
+
+        return returnFunction;
+
+    };
+
+    library.$$classDictionary = {};
+    library.libraryName = libraryName;
+
+    library.$skins = {};
+
+
+    library.skins = function () {
+
+        for (var i in arguments) {
+            var skinItem = arguments[i];
+            library.$skins[skinItem.Class] = skinItem;
         }
     };
 
-    //constructing core Library which is rama
-    var rama = window.rama = constructLibrary(LIBRARY_RAMA);
-    rama.library = library;
+    library.skinClass = function (className) {
 
+        var skinClassItem = library.$skins[className];
 
-    function initApplications(){
-
-        var appNodes = $(document).find('[' + R_APP + ']');
-
-        for(var i=0; i< appNodes.length; i++)
+        if(skinClassItem === null || skinClassItem === undefined || skinClassItem.Class === null ||  skinClassItem.Class === "")
         {
-            var appNode = $(appNodes[i]);
-            var application = rama[appNode.attr(R_APP)];
-
-            if(application)
-            {
-                initApplication(application, appNode)
-            }
+            throw new ReferenceError("Skin Class Note Found Exception: The requested Skin Class " + className + " could not be found\n" +
+                    "Please Make sure it is registered properly in the library ");
+        }
+        else
+        {
+            return library.libraryName + ":" + className;
         }
 
-    }
 
-    function initApplication(application, appNode){
+    };
 
-        var applicationManager = new ApplicationManager(application, appNode);
-        applicationManager.initialize();
+    library.Class = function (className) {
 
-    }
+        var classItem = library.$$classDictionary[className];
 
-    function ApplicationManager(applicationClass, rootNode){
-
-        var appClass = applicationClass;
-
-        this.application = null;
-        this.applicationNode = rootNode;
-
-
-        this.initialize = function(){
-
-            this.application = createComponent(rootNode[0], appClass);
-            this.application.applicationManager = this;
-            rootNode.replaceWith(this.application);
-            this.application.initialize();
-            this.application.inValidate();
+        if(classItem === null || classItem === undefined || classItem.constructor === null ||  classItem.constructor === undefined)
+        {
+            throw new ReferenceError("Class Note Found Exception: The requested Class " + className + " could not be found\n" +
+                    "Please Make sure it is registered in the library ");
         }
-
-    }
-
-    $(document).ready(function() {
-        initApplications();
-    });
-
-    //core functions
-    function constructLibrary(libraryName){
-
-        var Class;
-
-        var library = {};
-        libraryDictionary[libraryName] = library;
-
-        (function(){
-
-            var initializing = false;
-
-            Class = function(){};
-
-            Class.extend = function(classname, constructor)
+        else
+        {
+            if(classItem.superClassItem !== null && classItem.superClassItem !== undefined)
             {
-                var thisClass = this;
-                var newClass = function(){
-                    var baseClass = thisClass;
-                    var subClass = constructor;
-                    var className = classname;
-
-                    var constructedClass = constructClass(baseClass, subClass, className);
-
-                    return constructedClass;
+                var constructor = function () {
+                    var baseClass = classItem.superClassItem.library.Class(classItem.superClassItem.name);
+                    var subClass = classItem.constructor;
+                    return classConstructor.constructClass(baseClass, subClass);
                 };
-                newClass.extend = Class.extend;
-                newClass.className = classname;
-
-                if(classname)
-                {
-                    library[classname] = newClass;
-                }
-
-                return newClass;
-            };
-
-            function constructClass(baseClass, subClass, subClassName)
-            {
-
-                initializing = true;
-                var _super = new baseClass();
-                var baseObject = new baseClass();
-                initializing = false;
-
-
-                function _superFactory(name,fn) {
-                    return function() {
-                        var tmp = this._super;
-
-                        /* Add a new ._super() method that is the same method */
-                        /* but on the super-class */
-                        this._super = _super[name];
-
-                        /* The method only need to be bound temporarily, so we */
-                        /* remove it when we're done executing */
-                        var ret = fn.apply(this, arguments);
-                        this._super = tmp;
-
-                        return ret;
-                    };
-                }
-
-                function _getSetsuperFactory(name,fn,source) {
-                    return function() {
-                        var tmp = this._super;
-
-                        /* Add a new ._super() method that is the same method */
-                        /* but on the super-class */
-                        this._super = source[name];
-
-                        /* The method only need to be bound temporarily, so we */
-                        /* remove it when we're done executing */
-                        var ret = fn.apply(this, arguments);
-                        this._super = tmp;
-
-                        return ret;
-                    };
-                }
-
-
-                var constructorInstance = new subClass();
-
-                for (var name in constructorInstance) {
-                    if(typeof constructorInstance[name] === "function" && typeof _super[name] === "function")
-                    {
-                        baseObject[name] = _superFactory(name,constructorInstance[name])
-                    }
-                    else
-                    {
-                        var propertyDescriptor =  Object.getOwnPropertyDescriptor(constructorInstance,name);
-                        if( propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
-                        {
-                            var newPrototypeDescripter = {};
-                            for(var descriptorName in propertyDescriptor)
-                            {
-                                if(typeof propertyDescriptor[descriptorName] === "function" )
-                                {
-                                    newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName,propertyDescriptor[descriptorName],propertyDescriptor)
-                                }
-                                else
-                                {
-                                    newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
-                                }
-                            }
-                            Object.defineProperty(baseObject,name, newPrototypeDescripter);
-                        }
-                        else
-                        {
-                            baseObject[name] = constructorInstance[name];
-                        }
-
-                    }
-                }
-
-                /* The dummy class constructor */
-                function RClass() {
-                    if ( !initializing && this.super ) {
-                        this.super.apply(this, arguments);
-                    }
-
-                    if ( !initializing && this.$$super ) {
-                        this.$$super.apply(this, arguments);
-                    }
-                }
-
-                /* Populate our constructed prototype object */
-                RClass.prototype = baseObject;
-
-                /* Enforce the constructor to be what we expect */
-                RClass.prototype.constructor = subClass;
-
-                RClass.className = subClassName;
-
-                return new RClass();
+                return constructor
             }
-
-        }());
-
-        library.Class = Class;
-
-        library.$skins = {};
-
-        library.skins = function (){
-
-            for( var i in arguments)
+            else
             {
-                var skinItem = arguments[i];
-                library.$skins[skinItem.Class] = skinItem;
+                return classItem.constructor;
             }
-        };
-
-        //if it is not a core library, exposing classes available in core Library
-        if(libraryName !== LIBRARY_RAMA)
-        {
 
         }
 
-        return library;
 
+    };
+
+    libraryDictionary[libraryName] = library;
+
+    return library;
+
+}
+
+var classConstructor = {};
+(function () {
+
+    var initializing = false;
+
+    classConstructor.constructClass = function (baseClass, subClass) {
+
+        initializing = true;
+        var _super = new baseClass();
+        var baseObject = new baseClass();
+        initializing = false;
+
+
+        function _superFactory(name, fn) {
+            return function () {
+                var tmp = this._super;
+
+                /* Add a new ._super() method that is the same method */
+                /* but on the super-class */
+                this._super = _super[name];
+
+                /* The method only need to be bound temporarily, so we */
+                /* remove it when we're done executing */
+                var ret = fn.apply(this, arguments);
+                this._super = tmp;
+
+                return ret;
+            };
+        }
+
+        function _getSetsuperFactory(name, fn, source) {
+            return function () {
+                var tmp = this._super;
+
+                /* Add a new ._super() method that is the same method */
+                /* but on the super-class */
+                this._super = source[name];
+
+                /* The method only need to be bound temporarily, so we */
+                /* remove it when we're done executing */
+                var ret = fn.apply(this, arguments);
+                this._super = tmp;
+
+                return ret;
+            };
+        }
+
+
+        var constructorInstance = new subClass();
+
+        for (var name in constructorInstance) {
+            if (typeof constructorInstance[name] === "function" && typeof _super[name] === "function") {
+                baseObject[name] = _superFactory(name, constructorInstance[name])
+            }
+            else {
+                var propertyDescriptor = Object.getOwnPropertyDescriptor(constructorInstance, name);
+                if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
+                    var newPrototypeDescripter = {};
+                    for (var descriptorName in propertyDescriptor) {
+                        if (typeof propertyDescriptor[descriptorName] === "function") {
+                            newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName, propertyDescriptor[descriptorName], propertyDescriptor)
+                        }
+                        else {
+                            newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
+                        }
+                    }
+                    Object.defineProperty(baseObject, name, newPrototypeDescripter);
+                }
+                else {
+                    baseObject[name] = constructorInstance[name];
+                }
+
+            }
+        }
+
+        /* The dummy class constructor */
+        function RClass() {
+            if (!initializing && this.super) {
+                this.super.apply(this, arguments);
+            }
+
+            if (!initializing && this.$$super) {
+                this.$$super.apply(this, arguments);
+            }
+        }
+
+        /* Populate our constructed prototype object */
+        RClass.prototype = baseObject;
+
+        /* Enforce the constructor to be what we expect */
+        RClass.prototype.constructor = subClass;
+
+        RClass.className = subClass.className;
+
+        return new RClass();
     }
 
-})(window, document);
+}());

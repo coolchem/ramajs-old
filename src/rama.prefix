@@ -1,0 +1,17 @@
+
+/**
+ * RamaJS JavaScript Framework v1.0
+ * DEVELOPED BY
+ * Varun Reddy Nalagatla
+ * varun8686@gmail.com
+ *
+ * Copyright 2014 Varun Reddy Nalagatla a.k.a coolchem
+ * Released under the MIT license
+ *
+ * FORK:
+ * https://github.com/coolchem/rama
+ */
+
+'use strict';
+
+(function(window, document) {'use strict';

@@ -1,16 +1,16 @@
+$r("Skin").extends($r("Group"))(function () {
 
-rama.Group.extend("Skin", function(){
+    var componentUtil = $r.$$componentUtil;
 
-    this.getSkinPart = function(compId){
+    this.getSkinPart = function (compId) {
 
         var element = null;
 
-        var dynamicElements = this.find('[' + COMP_ID + '=' + compId + ']');
-        var skinPartDictionaryElement = skinPartDictionary[compId];
+        var dynamicElements = this.find('[' + componentUtil.COMP_ID + '=' + compId + ']');
+        var skinPartDictionaryElement = $r.$$componentUtil.skinPartDictionary[compId];
 
-        if( skinPartDictionaryElement && dynamicElements && dynamicElements.length > 0)
-        {
-            if(skinPartDictionaryElement[0] === dynamicElements[0])
+        if (skinPartDictionaryElement && dynamicElements && dynamicElements.length > 0) {
+            if (skinPartDictionaryElement[0] === dynamicElements[0])
                 return skinPartDictionaryElement;
         }
 

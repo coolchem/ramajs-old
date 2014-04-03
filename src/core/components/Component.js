@@ -1,6 +1,4 @@
-
-
-rama.Class.extend("Component", function(){
+$r("Component")(function () {
 
     this.compid = "";
     this.comp = "";
@@ -9,19 +7,18 @@ rama.Class.extend("Component", function(){
 
     this.elements = [];
 
-    this.super = function()
-    {
+    this.super = function () {
 
     };
 
-    this.$$super = function(){
+    this.$$super = function () {
 
         $.extend(this, $("<div></div>")); //every component starts of as empty div
     };
 
-    this.initialize = function(){
+    this.initialize = function () {
 
-        if(this.initialized)
+        if (this.initialized)
             return;
         this.$$createChildren();
         this.$$childrenCreated();
@@ -29,29 +26,29 @@ rama.Class.extend("Component", function(){
         this.initialized = true;
     };
 
-    this.inValidate = function(){
+    this.inValidate = function () {
 
     };
 
-    this.addElement = function(element){
+    this.addElement = function (element) {
         element.parentComponent = this;
         element.initialize();
         this.elements.push(element);
         this.append(element);
     };
 
-    this.removeElement = function(element){
+    this.removeElement = function (element) {
 
         this.remove(element);
     };
 
 
-    this.$$createChildren = function(){
+    this.$$createChildren = function () {
 
     };
 
 
-    this.$$childrenCreated = function(){
+    this.$$childrenCreated = function () {
 
     };
 

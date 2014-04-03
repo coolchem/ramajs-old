@@ -17,9 +17,6 @@ rama.Group.extend("HGroup", function(){
 
 });
 
-rama.Group.extend("DataGroup", function(){
-
-});
 
 rama.SkinnableContainer.extend("ViewStack", function(){
 

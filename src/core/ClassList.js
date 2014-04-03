@@ -1,10 +1,14 @@
 
-rama.exposedClassesAndProperties = function(){
+$r.$$ClassList = {
 
-    this.GROUP_BASE = "GroupBase";
-    this.SKINNABLE_COMPONENT = "SkinnableComponent";
-    this.SKINNABLE_CONTAINER = "SkinnableContainer";
-    this.GROUP = "Group";
-    this.DATA_GROUP = "DataGroup";
+    APPLICATION: {className:"Application", importToLibrary:false},
+    COMPONENT: {className:"Component", importToLibrary:true},
+    GROUP_BASE: {className:"GroupBase", importToLibrary:true},
+    GROUP: {className:"Group", importToLibrary:true},
+    DATA_GROUP: {className:"DataGroup", importToLibrary:true},
+    LAYOUT_BASE: {className:"LayoutBase", importToLibrary:true},
+    SKIN: {className:"Skin", importToLibrary:false},
+    SKINNABLE_COMPONENT: {className:"SkinnableComponent", importToLibrary:true},
+    SKINNABLE_CONTAINER: {className:"SkinnableContainer", importToLibrary:true}
 
 };

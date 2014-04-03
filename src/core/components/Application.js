@@ -1,5 +1,5 @@
-
-rama.SkinnableComponent.extend("Application", function(){
+$r("Application").extends($r("SkinnableComponent"))(function () {
 
     this.applicationManager = null;
+
 });

@@ -1,25 +1,25 @@
-/**
- * Created with IntelliJ IDEA.
- * User: varunreddy
- * Date: 2/15/14
- * Time: 9:39 AM
- * To change this template use File | Settings | File Templates.
- */
 
-var demoLibrary = rama.library("demoLibrary");
+var demoLibrary = $r.library("demoLibrary");
 
 demoLibrary.skins(
         {Class:'MainContainerSkin', skinURL:"views/main/skins/mainContainerSkin.html"},
         {Class:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
 );
 
-demoLibrary.SkinnableContainer.extend("MainContainer", function(){
+demoLibrary("testData")(function(){
+    this.myDataArray = ["humm", "aaaah", "aha"]
+});
 
-    this.skinClass =  "demoLibrary:MainContainerSkin";
+
+demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
+
+    this.skinClass =  demoLibrary.skinClass("MainContainerSkin");
 
     this.skinParts = [{id:'testButton', required:true}];
 
     this.testButton = null;
+
+    var testingData = new demoLibrary.Class("testData")();
 
     var _contentGroup = null;
 
@@ -40,7 +40,6 @@ demoLibrary.SkinnableContainer.extend("MainContainer", function(){
 
     };
 
-
     function handleTestButtonClick(){
 
         if(_contentGroup)
@@ -54,13 +53,12 @@ demoLibrary.SkinnableContainer.extend("MainContainer", function(){
             _contentGroup[0].style.display = "none";
         }
     }
-
 });
 
 
-rama.SkinnableComponent.extend("MainComponent", function(){
+$r("MainComponent").extends($r("SkinnableComponent"))(function(){
 
-     this.skinClass =  "demoLibrary:MainComponentSkin";
+     this.skinClass =  demoLibrary.skinClass("MainComponentSkin");
 
      this.skinParts = [];
 
