@@ -5,6 +5,7 @@ $r("GroupBase").extends($r("Component"))(function () {
     var componentUtil = $r.$$componentUtil;
 
     var _htmlContent = [];
+
     Object.defineProperty(this, "htmlContent",
             {   get:function () {
                 return _htmlContent;
@@ -21,7 +22,8 @@ $r("GroupBase").extends($r("Component"))(function () {
 
         if (this.htmlContent.length > 0) {
             for (var i = 0; i < this.htmlContent.length; i++) {
-                var componentClassName = $(this.htmlContent[i]).attr(componentUtil.R_COMP);
+
+                var componentClassName = this.htmlContent[i].getAttribute(componentUtil.R_COMP);
                 var comp = componentUtil.createComponent(this.htmlContent[i], classUtil.classFactory(componentClassName));
                 this.addElement(comp);
             }

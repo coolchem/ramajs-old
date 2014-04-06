@@ -2,12 +2,12 @@
 var demoLibrary = $r.library("demoLibrary");
 
 demoLibrary.skins(
-        {Class:'MainContainerSkin', skinURL:"views/main/skins/mainContainerSkin.html"},
-        {Class:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
+        {skinClass:'MainContainerSkin', skinURL:"views/main/skins/mainContainerSkin.html"},
+        {skinClass:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
 );
 
 demoLibrary("testData")(function(){
-    this.myDataArray = ["humm", "aaaah", "aha"]
+    this.myDataArray = ["humm", "aaaah", "aha"];
 });
 
 
@@ -19,7 +19,8 @@ demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
 
     this.testButton = null;
 
-    var testingData = new demoLibrary.Class("testData")();
+    var testModel =  demoLibrary.new("testData");
+    var testingEventDispatcher = $r.new('EventDispatcher');
 
     var _contentGroup = null;
 
@@ -30,7 +31,9 @@ demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
 
         if(instance === this.testButton)
         {
-            this.testButton[0].addEventListener('click', handleTestButtonClick)
+            this.testButton.addEventListener('click', handleTestButtonClick);
+
+            testingEventDispatcher.addEventListener('myEvent', handleMyEvent);
         }
 
         if(instance === this.contentGroup)
@@ -40,7 +43,13 @@ demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
 
     };
 
-    function handleTestButtonClick(){
+    function handleTestButtonClick(clickEvent){
+        var customEvent = $r.new("Event",["myEvent", true,false]);
+
+        testingEventDispatcher.dispatchEvent(customEvent.eventObject);
+    }
+
+    function handleMyEvent(event){
 
         if(_contentGroup)
         {

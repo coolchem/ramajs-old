@@ -9,7 +9,7 @@
 'use strict';
 
 $r.skins(
-        {Class:'AppSkin', skinURL:"appSkin.html"}
+        {skinClass:'AppSkin', skinURL:"appSkin.html"}
 );
 
 $r.Application('testApplication', function()

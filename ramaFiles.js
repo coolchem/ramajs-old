@@ -2,8 +2,13 @@ ramaFiles = {
   'rama': [
 
       'src/rama.prefix',
-      'src/core/core.js',
-      'src/core/ClassList.js',
+      'src/core/Constants.js',
+      'src/core/Core.js',
+      'src/core/utils/ClassUtil.js',
+      'src/core/utils/ComponentUtil.js',
+      'src/lib/sizzle.js',
+      'src/core/Api.js',
+      'src/rama.suffix',
       'src/core/components/Component.js',
       'src/core/components/GroupBase.js',
       'src/core/components/DataGroup.js',
@@ -13,9 +18,9 @@ ramaFiles = {
       'src/core/components/SkinnableContainer.js',
       'src/core/components/Application.js',
       'src/core/layouts/LayoutBase.js',
-      'src/core/utils/ClassUtil.js',
-      'src/core/utils/ComponentUtil.js',
-      'src/rama.suffix'
+      'src/core/EventDispatcher.js',
+      'src/core/events/Event.js'
+
   ]
 };
 
