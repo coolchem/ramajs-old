@@ -9,8 +9,7 @@ function componentUtil(){
     componentUtil.R_COMP = R_COMP;
     componentUtil.COMP_ID = COMP_ID;
 
-
-    var skinPartDictionary = componentUtil.skinPartDictionary =  {};
+    var skinPartDictionary = componentUtil.skinPartDictionary = new Dictionary();
 
     componentUtil.createComponent = function(node, componentClass) {
         var component = null;
@@ -55,7 +54,8 @@ function componentUtil(){
         var componentAttr = component.getAttribute(COMP_ID);
 
         if (componentAttr !== null && componentAttr !== undefined && componentAttr !== "") {
-            skinPartDictionary[componentAttr] = component;
+
+            skinPartDictionary.put(component[0], component);
         }
     }
 

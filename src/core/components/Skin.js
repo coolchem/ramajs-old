@@ -7,11 +7,9 @@ $r("Skin").extends($r("Group"))(function () {
         var element = null;
 
         var dynamicElements = this.find('[' + componentUtil.COMP_ID + '=' + compId + ']');
-        var skinPartDictionaryElement = $r.$$componentUtil.skinPartDictionary[compId];
 
-        if (skinPartDictionaryElement && dynamicElements && dynamicElements.length > 0) {
-            if (skinPartDictionaryElement[0] === dynamicElements[0])
-                return skinPartDictionaryElement;
+        if (dynamicElements && dynamicElements.length > 0) {
+           return $r.$$componentUtil.skinPartDictionary.get(dynamicElements[0]);
         }
 
         return element;

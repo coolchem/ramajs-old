@@ -9,6 +9,7 @@ ramaFiles = {
       'src/lib/sizzle.js',
       'src/core/Api.js',
       'src/rama.suffix',
+      'src/core/collections/Dictionary.js',
       'src/core/components/Component.js',
       'src/core/components/GroupBase.js',
       'src/core/components/DataGroup.js',

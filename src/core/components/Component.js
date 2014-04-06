@@ -6,6 +6,8 @@ $r("Component").extends($r("EventDispatcher"))(function () {
 
     this.elements = [];
 
+    this.parentComponent = null;
+
     this.find = function(selector){
         return $r.find(selector, this[0]);
     };

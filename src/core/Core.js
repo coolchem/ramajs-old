@@ -1,7 +1,6 @@
 "use strict";
 
 
-
 var libraryDictionary = {};
 
 
@@ -141,15 +140,16 @@ function constructLibrary(libraryName) {
             if (classItem.superClassItem !== null && classItem.superClassItem !== undefined) {
                 baseClass = classItem.superClassItem.library.Class(classItem.superClassItem.name);
             }
-            else
-            {
-                baseClass = function(){};
+            else {
+
+                baseClass = function () {
+                };
             }
 
-            var constructor = function () {
+            var constructor = function (isBaseClassConstruction) {
 
                 var subClass = classItem.classConstructor;
-                return classConstructor.constructClass(baseClass, subClass,constructorArguments);
+                return constructClass(baseClass, subClass, constructorArguments, isBaseClassConstruction);
             };
             return constructor
         }
@@ -171,8 +171,7 @@ function constructLibrary(libraryName) {
 
 }
 
-function createClassItem(className, library)
-{
+function createClassItem(className, library) {
     var newClassItem = {};
     newClassItem.name = className;
     newClassItem.classConstructor = function () {
@@ -210,109 +209,147 @@ function getLibraryReturnFunction(classItem) {
     return returnFunction;
 }
 
-var classConstructor = {};
-(function () {
+function constructClass(baseClass, subClass, constructorArguments, isBaseClassConstruction) {
 
-    var initializing = false;
+    var _super = new baseClass(true);
+    var baseObject = new baseClass(true);
 
-    classConstructor.constructClass = function (baseClass, subClass, constructorArguments) {
+    function _superFactory(name, fn) {
+        return function () {
+            var tmp = this._super;
 
-        initializing = true;
-        var _super = new baseClass();
-        var baseObject = new baseClass();
-        initializing = false;
+            /* Add a new ._super() method that is the same method */
+            /* but on the super-class */
+            this._super = _super[name];
+
+            /* The method only need to be bound temporarily, so we */
+            /* remove it when we're done executing */
+            var ret = fn.apply(this, arguments);
+            this._super = tmp;
+
+            return ret;
+        };
+    }
+
+    function _getSetsuperFactory(name, fn, source) {
+        return function () {
+            var tmp = this._super;
+
+            /* Add a new ._super() method that is the same method */
+            /* but on the super-class */
+            this._super = source[name];
+
+            /* The method only need to be bound temporarily, so we */
+            /* remove it when we're done executing */
+            var ret = fn.apply(this, arguments);
+            this._super = tmp;
+
+            return ret;
+        };
+    }
 
 
-        function _superFactory(name, fn) {
-            return function () {
-                var tmp = this._super;
+    var constructorInstance = new subClass();
 
-                /* Add a new ._super() method that is the same method */
-                /* but on the super-class */
-                this._super = _super[name];
-
-                /* The method only need to be bound temporarily, so we */
-                /* remove it when we're done executing */
-                var ret = fn.apply(this, arguments);
-                this._super = tmp;
-
-                return ret;
-            };
+    for (var propName in constructorInstance) {
+        if (typeof constructorInstance[propName] === "function" && typeof _super[propName] === "function") {
+            baseObject[propName] = _superFactory(propName, constructorInstance[propName])
         }
-
-        function _getSetsuperFactory(name, fn, source) {
-            return function () {
-                var tmp = this._super;
-
-                /* Add a new ._super() method that is the same method */
-                /* but on the super-class */
-                this._super = source[name];
-
-                /* The method only need to be bound temporarily, so we */
-                /* remove it when we're done executing */
-                var ret = fn.apply(this, arguments);
-                this._super = tmp;
-
-                return ret;
-            };
-        }
-
-
-        var constructorInstance = new subClass();
-
-        for (var propName in constructorInstance) {
-            if (typeof constructorInstance[propName] === "function" && typeof _super[propName] === "function") {
-                baseObject[propName] = _superFactory(propName, constructorInstance[propName])
+        else {
+            var propertyDescriptor = Object.getOwnPropertyDescriptor(constructorInstance, propName);
+            if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
+                var newPrototypeDescripter = {};
+                for (var descriptorName in propertyDescriptor) {
+                    if (typeof propertyDescriptor[descriptorName] === "function") {
+                        newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName, propertyDescriptor[descriptorName], propertyDescriptor)
+                    }
+                    else {
+                        newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
+                    }
+                }
+                Object.defineProperty(baseObject, propName, newPrototypeDescripter);
             }
             else {
-                var propertyDescriptor = Object.getOwnPropertyDescriptor(constructorInstance, propName);
-                if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
-                    var newPrototypeDescripter = {};
-                    for (var descriptorName in propertyDescriptor) {
-                        if (typeof propertyDescriptor[descriptorName] === "function") {
-                            newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName, propertyDescriptor[descriptorName], propertyDescriptor)
-                        }
-                        else {
-                            newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
-                        }
-                    }
-                    Object.defineProperty(baseObject, propName, newPrototypeDescripter);
-                }
-                else {
-                    baseObject[propName] = constructorInstance[propName];
-                }
-
-            }
-        }
-
-        /* The dummy class constructor */
-        function RClass() {
-            if (!initializing && this.super) {
-                this.super.apply(this, arguments);
+                baseObject[propName] = constructorInstance[propName];
             }
 
-            if (!initializing && this.$$super) {
-                this.$$super.apply(this, arguments);
-            }
-        }
-
-        /* Populate our constructed prototype object */
-        RClass.prototype = baseObject;
-
-        /* Enforce the constructor to be what we expect */
-        RClass.prototype.constructor = subClass;
-
-
-        return construct(RClass, constructorArguments);
-
-
-        function construct(constructor, args) {
-            function F() {
-                return constructor.apply(this, args);
-            }
-            F.prototype = constructor.prototype;
-            return new F();
         }
     }
 
-}());
+    /* The dummy class constructor */
+    function RClass() {
+        if (!isBaseClassConstruction && this.super) {
+            this.super.apply(this, arguments);
+        }
+
+        if (!isBaseClassConstruction && this.$$super) {
+            this.$$super.apply(this, arguments);
+        }
+    }
+
+    /* Populate our constructed prototype object */
+    RClass.prototype = baseObject;
+
+    /* Enforce the constructor to be what we expect */
+    RClass.prototype.constructor = subClass;
+
+
+    return construct(RClass, constructorArguments);
+
+
+    function construct(constructor, args) {
+        function F() {
+            return constructor.apply(this, args);
+        }
+
+        F.prototype = constructor.prototype;
+        return new F();
+    }
+}
+
+var Dictionary = function () {
+
+    var dictionary = {};
+    var dictionaryArray = [];
+
+    dictionary.get = function (key) {
+
+        var item = getKeyItem(key);
+        if (item !== undefined) {
+            return item.value;
+        }
+    };
+    dictionary.put = function (key, value) {
+
+        var item = getKeyItem(key);
+        if (item !== undefined) {
+            item.value = value;
+        }
+        else {
+            dictionaryArray.push({key:key, value:value});
+        }
+    };
+
+    dictionary.remove = function (key) {
+        for (var i = 0; i < dictionaryArray.length; i++) {
+            var item = dictionaryArray[i];
+            if (item.key === key) {
+                dictionaryArray.splice(i, 1);
+                break;
+            }
+        }
+    };
+
+    function getKeyItem(key) {
+
+        for (var i = 0; i < dictionaryArray.length; i++) {
+            var item = dictionaryArray[i];
+            if (item.key === key) {
+                return item;
+            }
+        }
+
+    }
+
+    return dictionary;
+};

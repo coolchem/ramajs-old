@@ -6,9 +6,22 @@ demoLibrary.skins(
         {skinClass:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
 );
 
-demoLibrary("testData")(function(){
-    this.myDataArray = ["humm", "aaaah", "aha"];
+demoLibrary("TestModel")(function(){
+    var superCount = 0;
+    this.super = function(){
+       console.log(superCount);
+        superCount++;
+    };
+
 });
+
+demoLibrary("TestModel1").extends(demoLibrary("TestModel"))(function(){
+    this.super = function(){
+        this._super();
+    };
+
+});
+
 
 
 demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
@@ -19,7 +32,9 @@ demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
 
     this.testButton = null;
 
-    var testModel =  demoLibrary.new("testData");
+    //var testModel =  $r.new("TestModel");
+    var testModel1 =  demoLibrary.new("TestModel1");
+
     var testingEventDispatcher = $r.new('EventDispatcher');
 
     var _contentGroup = null;
@@ -44,6 +59,7 @@ demoLibrary("MainContainer").extends($r("SkinnableContainer"))(function(){
     };
 
     function handleTestButtonClick(clickEvent){
+
         var customEvent = $r.new("Event",["myEvent", true,false]);
 
         testingEventDispatcher.dispatchEvent(customEvent.eventObject);
