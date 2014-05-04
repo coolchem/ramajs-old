@@ -279,12 +279,12 @@ function constructClass(subClass, baseClass, constructorArguments, isBaseClassCo
 
     for (var propName in newInstance)
     {
-            if (propName !== subClass.className && typeof newInstance[propName] === "function" && typeof baseObject[propName] === "function") {
+        if (propName !== subClass.className && typeof newInstance[propName] === "function" && typeof baseObject[propName] === "function") {
 
-                //baseObject[propName] = _getSetsuperFactory(propName, baseObject[propName], baseObject)
+            //baseObject[propName] = _getSetsuperFactory(propName, baseObject[propName], baseObject)
 
-                newInstance.super[propName] = _superFactory(propName,newInstance,baseObject)
-            }
+            newInstance.super[propName] = _superFactory(propName,newInstance,baseObject)
+        }
     }
 
     function _superFactory(name,instance, baseObject) {
