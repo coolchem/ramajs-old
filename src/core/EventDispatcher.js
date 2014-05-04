@@ -1,22 +1,19 @@
+$r.Class("EventDispatcher")(function () {
 
-$r("EventDispatcher")(function(){
+    this.EventDispatcher = function () {
 
-    this.super = function () {
-
-        this[0] = document.createElement("div");
+        this[0] = document.createElement("event-dispatcher");
     };
 
-    this.addEventListener = function(type,listener,useCapture)
-    {
+    this.addEventListener = function (type, listener, useCapture) {
         this[0].addEventListener.apply(this[0], arguments);
     };
 
-    this.removeEventListener = function(type,listener,useCapture)
-    {
+    this.removeEventListener = function (type, listener, useCapture) {
         this[0].removeEventListener.apply(this[0], arguments);
     };
 
-    this.dispatchEvent = function(event){
+    this.dispatchEvent = function (event) {
 
         if (document.createEvent) {
             this[0].dispatchEvent(event);

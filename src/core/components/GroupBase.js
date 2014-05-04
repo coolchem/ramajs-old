@@ -1,4 +1,5 @@
-$r("GroupBase").extends($r("Component"))(function () {
+$r.Class("GroupBase").extends($r.Class("Component"))(function () {
+
 
     var classUtil = $r.$$classUtil;
 
@@ -6,28 +7,32 @@ $r("GroupBase").extends($r("Component"))(function () {
 
     var _htmlContent = [];
 
-    Object.defineProperty(this, "htmlContent",
-            {   get:function () {
-                return _htmlContent;
-            },
-                set:function (newValue) {
-                    _htmlContent = newValue;
-                    setHTMLContent(this);
-                },
-                enumerable:true,
-                configurable:true
-            });
+    this.get("htmlContent",function(){
+
+        return _htmlContent;
+    });
+
+    this.set("htmlContent",function(newValue){
+
+        _htmlContent = newValue;
+        setHTMLContent(this);
+    });
 
     this.$$createChildren = function () {
 
         if (this.htmlContent.length > 0) {
             for (var i = 0; i < this.htmlContent.length; i++) {
 
-                var componentClassName = this.htmlContent[i].getAttribute(componentUtil.R_COMP);
-                var comp = componentUtil.createComponent(this.htmlContent[i], classUtil.classFactory(componentClassName));
-                this.addElement(comp);
+                this.$createAndAddChild(this.htmlContent[i]);
             }
         }
+    };
+
+    this.$createAndAddChild = function(componentNode){
+            var componentClassName = componentNode.getAttribute(componentUtil.R_COMP);
+            var comp = componentUtil.createComponent(componentNode, classUtil.classFactory(componentClassName));
+            this.addElement(comp);
+            return comp;
     };
 
     function setHTMLContent(_this) {

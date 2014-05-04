@@ -6,7 +6,7 @@ function classUtil(){
         var libraryAndClass = getLibraryAndClass(className);
 
         if (libraryAndClass && libraryAndClass.library && libraryAndClass.className && libraryAndClass.className !== "") {
-            return libraryAndClass.library.Class(libraryAndClass.className);
+            return libraryAndClass.library.ClassFactory(libraryAndClass.className);
         }
 
         return null;

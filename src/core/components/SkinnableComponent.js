@@ -1,4 +1,4 @@
-$r("SkinnableComponent").extends($r("Component"))(function () {
+$r.Class("SkinnableComponent").extends($r.Class("Component"))(function () {
 
     var _inValidating = false;
 
@@ -9,6 +9,20 @@ $r("SkinnableComponent").extends($r("Component"))(function () {
     var classUtil = $r.$$classUtil;
 
     var componentUtil = $r.$$componentUtil;
+
+    var _testAttr = ""
+
+    Object.defineProperty(this, "testAttr",
+            {   get:function () {
+                return _testAttr;
+            },
+                set:function (newValue) {
+                    _testAttr = newValue;
+                    console.log(_testAttr);
+                },
+                enumerable:true,
+                configurable:true
+            });
 
     Object.defineProperty(this, "skinClass",
             {   get:function () {
@@ -46,14 +60,14 @@ $r("SkinnableComponent").extends($r("Component"))(function () {
     };
 
     this.$$childrenCreated = function () {
-        this._super();
+        this.super.$$childrenCreated();
         findSkinParts(this);
     };
 
 
     function attachSkin(_this) {
 
-        _skinElement = componentUtil.createComponent(classUtil.skinFactory(_this), $r.Class("Skin"));
+        _skinElement = componentUtil.createComponent(classUtil.skinFactory(_this), $r.ClassFactory("Skin"));
         _this.addElement(_skinElement);
 
         if (_inValidating) {
@@ -70,7 +84,7 @@ $r("SkinnableComponent").extends($r("Component"))(function () {
 
     this.inValidate = function () {
 
-        this._super();
+        this.super.inValidate();
         if (_skinElement) {
             _skinElement.inValidate();
             _inValidating = false;

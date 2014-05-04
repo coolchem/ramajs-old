@@ -31,7 +31,6 @@ rama.LayoutBase.extend("verticalLayout", function(){
 
     this.updateLayout = function(){
 
-        this._super();
     }
 
 });

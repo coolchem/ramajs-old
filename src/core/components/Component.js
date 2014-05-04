@@ -1,4 +1,4 @@
-$r("Component").extends($r("EventDispatcher"))(function () {
+$r.Class("Component").extends($r.Class("EventDispatcher"))(function () {
 
     this.compid = "";
     this.comp = "";
@@ -7,6 +7,11 @@ $r("Component").extends($r("EventDispatcher"))(function () {
     this.elements = [];
 
     this.parentComponent = null;
+
+    this.Component = function () {
+
+        this[0] = document.createElement("div");
+    };
 
     this.find = function(selector){
         return $r.find(selector, this[0]);

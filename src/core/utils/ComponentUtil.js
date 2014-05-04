@@ -8,6 +8,7 @@ function componentUtil(){
 
     componentUtil.R_COMP = R_COMP;
     componentUtil.COMP_ID = COMP_ID;
+    componentUtil.STATES = STATES;
 
     var skinPartDictionary = componentUtil.skinPartDictionary = new Dictionary();
 
@@ -23,7 +24,6 @@ function componentUtil(){
         }
 
         //applying node attributes
-
         if (node.attributes !== undefined && node.attributes.length > 0) {
 
             for (var j = 0; j < node.attributes.length; j++) {
@@ -34,7 +34,6 @@ function componentUtil(){
         }
 
         //setting up html content
-
         if (node.children !== undefined && node.children.length > 0) {
             //setting innerHTML to empty so that children are created through normal process
             component[0].innerHTML = "";

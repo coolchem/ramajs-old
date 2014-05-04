@@ -1,4 +1,4 @@
-$r("Group").extends($r("GroupBase"))(function () {
+$r.Class("Group").extends($r.Class("GroupBase"))(function () {
 
 
 });

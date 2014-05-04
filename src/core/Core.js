@@ -15,13 +15,8 @@ var library = function (libraryName) {
 };
 
 var Application = function (applicationname, constructor) {
-    var newClassItem = {};
-    newClassItem.name = applicationname;
-    newClassItem.classConstructor = constructor;
-    newClassItem.classConstructor.className = applicationname;
-    newClassItem.superClassItem = $r("Application").classItem;
-    newClassItem.library = $r;
-    $r.$$classDictionary[applicationname] = newClassItem;
+
+    createClassItem(applicationname, $r, constructor, $r.$$classDictionary[APPLICATION]);
 };
 
 
@@ -31,7 +26,7 @@ function initApplications() {
 
     for (var i = 0; i < appNodes.length; i++) {
         var appNode = appNodes[i];
-        var application = $r.Class(appNode.getAttribute(R_APP));
+        var application = $r.ClassFactory(appNode.getAttribute(R_APP));
 
         if (application) {
             initApplication(application, appNode)
@@ -71,31 +66,7 @@ function ApplicationManager(applicationClass, rootNode) {
 //core functions
 function constructLibrary(libraryName) {
 
-    var library = function (className) {
-
-        var classItem = library.$$classDictionary[className];
-
-        if (classItem === null || classItem === undefined) {
-
-            //this means the class has never been register in the library so
-            //so register the Class into library
-            createClassItem(className, library);
-
-
-        }
-
-        classItem = library.$$classDictionary[className];
-
-        //1.when i get class name, I need to register the class somewhere
-
-        //2.then return a function so user can register a constructor class for the given classname
-
-        //3.also the return function should have an extend function which take the argument of a return value of requesting a class name which is essentially a constructor
-
-        //4.the extend function should then register that constructor as base class for the class registered in step 2
-
-        return getLibraryReturnFunction(classItem);
-    };
+    var library = {};
 
     library.$$classDictionary = {};
     library.libraryName = libraryName;
@@ -126,7 +97,38 @@ function constructLibrary(libraryName) {
 
     };
 
-    library.Class = function (className, constructorArguments) {
+    library.Class = function (className) {
+
+        if (className !== undefined && className !== null && className !== "") {
+            var classItem = library.$$classDictionary[className];
+
+            if (classItem === null || classItem === undefined) {
+
+                //this means the class has never been register in the library so
+                //so register the Class into library
+                createClassItem(className, library);
+            }
+
+            classItem = library.$$classDictionary[className];
+
+            //1.when i get class name, I need to register the class somewhere
+
+            //2.then return a function so user can register a constructor class for the given classname
+
+            //3.also the return function should have an extend function which take the argument of a return value of requesting a class name which is essentially a constructor
+
+            //4.the extend function should then register that constructor as base class for the class registered in step 2
+
+            return getLibraryReturnFunction(classItem);
+        }
+        else {
+            throw new ReferenceError("Class Name not specified exception: The Class Name value was specified as 'undefined' or 'null' or an empty string");
+        }
+
+
+    };
+
+    library.ClassFactory = function (className) {
 
         var classItem = library.$$classDictionary[className];
 
@@ -138,30 +140,41 @@ function constructLibrary(libraryName) {
 
             var baseClass;
             if (classItem.superClassItem !== null && classItem.superClassItem !== undefined) {
-                baseClass = classItem.superClassItem.library.Class(classItem.superClassItem.name);
+                baseClass = classItem.superClassItem.library.ClassFactory(classItem.superClassItem.name);
+                baseClass.className = classItem.superClassItem.name;
             }
             else {
 
                 baseClass = function () {
                 };
+                baseClass.className = "Class"
             }
 
-            var constructor = function (isBaseClassConstruction) {
+            var constructor = function () {
+                var constructorArguments = null;
+                var isBaseClassConstruction = false;
 
+                if (arguments[0] !== undefined) {
+                    if (arguments[0] === true) {
+                        isBaseClassConstruction = true;
+                    }
+                    else {
+                        constructorArguments = arguments[0];
+                    }
+                }
                 var subClass = classItem.classConstructor;
-                return constructClass(baseClass, subClass, constructorArguments, isBaseClassConstruction);
+                subClass.className = classItem.name;
+                return constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction);
             };
             return constructor
         }
-
-
     };
 
     library.new = function (className, constructorArguments) {
 
-        var classConstructor = library.Class(className, constructorArguments);
+        var classConstructor = library.ClassFactory(className);
 
-        return new classConstructor();
+        return new classConstructor(constructorArguments);
 
     };
 
@@ -171,13 +184,24 @@ function constructLibrary(libraryName) {
 
 }
 
-function createClassItem(className, library) {
+function createClassItem(className, library, classConstructor, superClassItem) {
     var newClassItem = {};
     newClassItem.name = className;
-    newClassItem.classConstructor = function () {
-    };
-    newClassItem.classConstructor.className = className;
-    newClassItem.superClassItem = null;
+    if (classConstructor === null || classConstructor === undefined) {
+        newClassItem.classConstructor = function () {
+        };
+    }
+    else {
+        newClassItem.classConstructor = classConstructor;
+    }
+
+    if (superClassItem === undefined) {
+        newClassItem.superClassItem = null;
+    }
+    else {
+        newClassItem.superClassItem = superClassItem;
+    }
+
     newClassItem.library = library;
     library.$$classDictionary[className] = newClassItem;
 }
@@ -187,7 +211,6 @@ function getLibraryReturnFunction(classItem) {
     var returnFunction = function (constructor) {
 
         classItem.classConstructor = constructor;
-        classItem.classConstructor.className = classItem.name;
     };
 
 
@@ -209,102 +232,101 @@ function getLibraryReturnFunction(classItem) {
     return returnFunction;
 }
 
-function constructClass(baseClass, subClass, constructorArguments, isBaseClassConstruction) {
+function constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction) {
 
-    var _super = new baseClass(true);
     var baseObject = new baseClass(true);
+    /* The dummy class constructor */
+    function Class() {
+    }
 
-    function _superFactory(name, fn) {
+    subClass.prototype = baseObject;
+
+    subClass.prototype.get = function (propertyName, getter) {
+
+        Object.defineProperty(this, propertyName,
+                {   get:getter,
+                    enumerable:true,
+                    configurable:true
+                });
+    }
+
+    subClass.prototype.set = function (propertyName, setter) {
+
+        Object.defineProperty(this, propertyName,
+                {   set:setter,
+                    enumerable:true,
+                    configurable:true
+                });
+    }
+
+    var newInstance = new subClass();
+
+    newInstance.super = function () {
+
+        if (!baseObject[baseClass.className]) {
+            baseObject[baseClass.className] = function () {
+
+                if (baseObject.super) {
+                    baseObject.super.apply(newInstance, constructorArguments);
+                }
+
+            }
+        }
+
+        baseObject[baseClass.className].apply(this, constructorArguments)
+    }
+
+
+    for (var propName in newInstance)
+    {
+            if (propName !== subClass.className && typeof newInstance[propName] === "function" && typeof baseObject[propName] === "function") {
+
+                //baseObject[propName] = _getSetsuperFactory(propName, baseObject[propName], baseObject)
+
+                newInstance.super[propName] = _superFactory(propName,newInstance,baseObject)
+            }
+    }
+
+    function _superFactory(name,instance, baseObject) {
         return function () {
-            var tmp = this._super;
 
-            /* Add a new ._super() method that is the same method */
-            /* but on the super-class */
-            this._super = _super[name];
-
-            /* The method only need to be bound temporarily, so we */
-            /* remove it when we're done executing */
-            var ret = fn.apply(this, arguments);
-            this._super = tmp;
-
+            var superFunction = baseObject[name];
+            var ret = superFunction.apply(instance, arguments);
             return ret;
         };
     }
 
     function _getSetsuperFactory(name, fn, source) {
         return function () {
-            var tmp = this._super;
+            var tmp = this.super[name];
 
             /* Add a new ._super() method that is the same method */
             /* but on the super-class */
-            this._super = source[name];
+            this.super[name] = source[name];
 
             /* The method only need to be bound temporarily, so we */
             /* remove it when we're done executing */
             var ret = fn.apply(this, arguments);
-            this._super = tmp;
+            this.super[name] = tmp;
 
             return ret;
         };
     }
 
+    //calling the super function
 
-    var constructorInstance = new subClass();
+    if (!isBaseClassConstruction) {
 
-    for (var propName in constructorInstance) {
-        if (typeof constructorInstance[propName] === "function" && typeof _super[propName] === "function") {
-            baseObject[propName] = _superFactory(propName, constructorInstance[propName])
-        }
-        else {
-            var propertyDescriptor = Object.getOwnPropertyDescriptor(constructorInstance, propName);
-            if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
-                var newPrototypeDescripter = {};
-                for (var descriptorName in propertyDescriptor) {
-                    if (typeof propertyDescriptor[descriptorName] === "function") {
-                        newPrototypeDescripter[descriptorName] = _getSetsuperFactory(descriptorName, propertyDescriptor[descriptorName], propertyDescriptor)
-                    }
-                    else {
-                        newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName]
-                    }
-                }
-                Object.defineProperty(baseObject, propName, newPrototypeDescripter);
+        if (!newInstance[subClass.className]) {
+            newInstance[subClass.className] = function () {
+                newInstance.super.apply(newInstance, constructorArguments);
             }
-            else {
-                baseObject[propName] = constructorInstance[propName];
-            }
-
         }
+
+        newInstance[subClass.className].apply(newInstance, constructorArguments);
     }
 
-    /* The dummy class constructor */
-    function RClass() {
-        if (!isBaseClassConstruction && this.super) {
-            this.super.apply(this, arguments);
-        }
-
-        if (!isBaseClassConstruction && this.$$super) {
-            this.$$super.apply(this, arguments);
-        }
-    }
-
-    /* Populate our constructed prototype object */
-    RClass.prototype = baseObject;
-
-    /* Enforce the constructor to be what we expect */
-    RClass.prototype.constructor = subClass;
-
-
-    return construct(RClass, constructorArguments);
-
-
-    function construct(constructor, args) {
-        function F() {
-            return constructor.apply(this, args);
-        }
-
-        F.prototype = constructor.prototype;
-        return new F();
-    }
+    return newInstance;
 }
 
 var Dictionary = function () {
