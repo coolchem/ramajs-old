@@ -3,7 +3,7 @@ ramaFiles = {
 
       'src/rama.prefix',
       'src/core/Constants.js',
-      'src/core/Core.js',
+      'src/core/RamaCore.js',
       'src/core/utils/ClassUtil.js',
       'src/core/utils/ComponentUtil.js',
       'src/lib/sizzle.js',
