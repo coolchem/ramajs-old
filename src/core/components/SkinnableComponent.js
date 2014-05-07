@@ -10,42 +10,22 @@ $r.Class("SkinnableComponent").extends($r.Class("Component"))(function () {
 
     var componentUtil = $r.$$componentUtil;
 
-    var _testAttr = ""
+    this.get("skinClass", function () {
+        return _skinClass;
+    })
 
-    Object.defineProperty(this, "testAttr",
-            {   get:function () {
-                return _testAttr;
-            },
-                set:function (newValue) {
-                    _testAttr = newValue;
-                    console.log(_testAttr);
-                },
-                enumerable:true,
-                configurable:true
-            });
-
-    Object.defineProperty(this, "skinClass",
-            {   get:function () {
-                return _skinClass;
-            },
-                set:function (newValue) {
-                    _skinClass = newValue;
-                },
-                enumerable:true,
-                configurable:true
-            });
+    this.set("skinClass", function (newValue) {
+        _skinClass = newValue;
+    })
 
     var _skinParts = [];
-    Object.defineProperty(this, "skinParts",
-            {   get:function () {
-                return _skinParts;
-            },
-                set:function (newValue) {
-                    defineSkinParts(newValue);
-                },
-                enumerable:true,
-                configurable:true
-            });
+    this.get("skinParts", function () {
+        return _skinParts;
+    })
+
+    this.set("skinParts", function (newValue) {
+        defineSkinParts(newValue);
+    })
 
     function defineSkinParts(skinPartss) {
 

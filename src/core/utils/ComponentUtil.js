@@ -39,7 +39,10 @@ function componentUtil(){
             component[0].innerHTML = "";
             for (var i = 0; i < node.children.length; i++) {
                 var childNode = node.children[i];
-                component.htmlContent.push(childNode);
+                if(component.htmlContent)
+                {
+                    component.htmlContent.push(childNode);
+                }
             }
         }
 

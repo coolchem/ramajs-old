@@ -1,16 +1,14 @@
 $r.Class("SkinnableContainer").extends($r.Class("SkinnableComponent"))(function () {
 
     var _htmlContent = [];
-    Object.defineProperty(this, "htmlContent",
-            {   get:function () {
-                return _htmlContent;
-            },
-                set:function (newValue) {
-                    _htmlContent = newValue;
-                },
-                enumerable:true,
-                configurable:true
-            });
+    this.get("htmlContent", function () {
+        return _htmlContent;
+    });
+
+    this.set("htmlContent", function(newValue){
+
+        _htmlContent = newValue;
+    });
 
     this.skinParts = [
         {id:'contentGroup', required:true}

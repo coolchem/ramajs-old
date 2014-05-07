@@ -14,7 +14,9 @@ $r.skins(
 
 $r.Application('testApplication', function()
 {
-
+    this.testApplication = function(){
+        this.super();
+    }
     this.skinClass = $r.skinClass("AppSkin");
 
     this.skinParts = [{id:'mainComponent', required:true}];

@@ -1,6 +1,33 @@
 "use strict";
 
 
+var Class
+(function(){
+    Class = function(){
+
+    };
+    Class.className = "Class";
+
+    Class.prototype.get = function (propertyName, getter) {
+
+        Object.defineProperty(this, propertyName,
+                {   get:getter,
+                    enumerable:true,
+                    configurable:true
+                });
+    }
+
+    Class.prototype.set = function (propertyName, setter) {
+
+        Object.defineProperty(this, propertyName,
+                {   set:setter,
+                    enumerable:true,
+                    configurable:true
+                });
+    }
+
+})();
+
 var libraryDictionary = {};
 
 
@@ -145,12 +172,14 @@ function constructLibrary(libraryName) {
             }
             else {
 
-                baseClass = function () {
-                };
-                baseClass.className = "Class"
+                baseClass = Class;
             }
 
-            var constructor = function () {
+            var subClass = classItem.classConstructor;
+            subClass.className = className;
+
+
+            return function () {
                 var constructorArguments = null;
                 var isBaseClassConstruction = false;
 
@@ -162,11 +191,8 @@ function constructLibrary(libraryName) {
                         constructorArguments = arguments[0];
                     }
                 }
-                var subClass = classItem.classConstructor;
-                subClass.className = classItem.name;
                 return constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction);
             };
-            return constructor
         }
     };
 
@@ -188,11 +214,12 @@ function createClassItem(className, library, classConstructor, superClassItem) {
     var newClassItem = {};
     newClassItem.name = className;
     if (classConstructor === null || classConstructor === undefined) {
-        newClassItem.classConstructor = function () {
-        };
+        newClassItem.classConstructor = Class;
     }
     else {
+        classConstructor.prototype = new Class();
         newClassItem.classConstructor = classConstructor;
+
     }
 
     if (superClassItem === undefined) {
@@ -210,6 +237,7 @@ function getLibraryReturnFunction(classItem) {
 
     var returnFunction = function (constructor) {
 
+        constructor.prototype = new Class();
         classItem.classConstructor = constructor;
     };
 
@@ -219,7 +247,7 @@ function getLibraryReturnFunction(classItem) {
         var classItem = this.classItem;
         var superClassItem = baseClassItem;
         return function (constructor) {
-
+            constructor.prototype = new Class();
             classItem.classConstructor = constructor;
             classItem.superClassItem = superClassItem.classItem;
         };
@@ -232,82 +260,132 @@ function getLibraryReturnFunction(classItem) {
     return returnFunction;
 }
 
+
+
 function constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction) {
 
-    var baseObject = new baseClass(true);
-    /* The dummy class constructor */
-    function Class() {
-    }
+    var baseClassInstance = new baseClass(true);
+    var subclassInstance = new subClass();
+    subclassInstance.classNameString = subClass.className;
 
-    subClass.prototype = baseObject;
 
-    subClass.prototype.get = function (propertyName, getter) {
+    function RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction){
 
-        Object.defineProperty(this, propertyName,
-                {   get:getter,
-                    enumerable:true,
-                    configurable:true
-                });
-    }
+       this.super = function(){
+           if(baseClassInstance[baseClassInstance.classNameString])
+               baseClassInstance[baseClassInstance.classNameString].apply(baseClassInstance,arguments);
+       }
 
-    subClass.prototype.set = function (propertyName, setter) {
+       this[subclassInstance.classNameString] = function()
+       {
+           if(subclassInstance[subclassInstance.classNameString])
+               subclassInstance[subclassInstance.classNameString].apply(this, arguments);
+           else
+               this.super.apply(this,arguments)
+       }
 
-        Object.defineProperty(this, propertyName,
-                {   set:setter,
-                    enumerable:true,
-                    configurable:true
-                });
-    }
+        for(var propName in subclassInstance)
+        {
+           if(propName !== subclassInstance.classNameString)
+           {
+               var propertyDescriptor = Object.getOwnPropertyDescriptor(subclassInstance, propName);
+               if(propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
+               {
+                   var newPrototypeDescripter = {};
+                   var basePropertyDescriptor = Object.getOwnPropertyDescriptor(baseClassInstance, propName)
+                   for (var descriptorName in propertyDescriptor)
+                   {
+                       if(basePropertyDescriptor !== undefined && basePropertyDescriptor.hasOwnProperty(descriptorName))
+                       {
+                           if(typeof propertyDescriptor[descriptorName] === "function" && typeof basePropertyDescriptor[descriptorName] === "function")
+                           {
+                               newPrototypeDescripter[descriptorName] = getterSetterSuperFunctionFactory(propName,propertyDescriptor[descriptorName],basePropertyDescriptor[descriptorName],descriptorName)
+                           }
+                           else
+                           {
+                               newPrototypeDescripter[descriptorName] = basePropertyDescriptor[descriptorName];
+                           }
+                       }
+                       else
+                       {
+                           newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName];
+                       }
 
-    var newInstance = new subClass();
+                   }
+                   Object.defineProperty(this, propName, newPrototypeDescripter);
+               }
+               else if(typeof subclassInstance[propName] === "function" && typeof baseClassInstance[propName] === "function")
+               {
+                   this[propName] = superFunctionFactory(propName,subclassInstance[propName],baseClassInstance[propName]);
 
-    newInstance.super = function () {
+               }
+               else
+               {
+                   this[propName] = subclassInstance[propName];
 
-        if (!baseObject[baseClass.className]) {
-            baseObject[baseClass.className] = function () {
+               }
+           }
+        }
 
-                if (baseObject.super) {
-                    baseObject.super.apply(newInstance, arguments);
+        if(!isBaseClassConstruction)
+        {
+            this[subclassInstance.classNameString].apply(this, constructorArguments);
+        }
+
+        function getterSetterSuperFunctionFactory(propName, fn, superFunction,type,baseClassInstance)
+        {
+            return function(){
+                var temp = this.super;
+                if(type === "get")
+                {
+                    Object.defineProperty(this.super, propName,
+                            {   get:contextFunction(superFunction, this),
+                                enumerable:true,
+                                configurable:true
+                            });
+                }else if(type === "set")
+                {
+                    Object.defineProperty(this.super, propName,
+                            {   set:contextFunction(superFunction, this),
+                                enumerable:true,
+                                configurable:true
+                            });
                 }
 
+                function contextFunction(fn,context){
+                    return function(){
+                        return superFunction.apply(this, arguments);
+                    }
+                }
+
+                var ret = fn.apply(this, arguments);
+                this.super = temp;
+                return ret;
             }
         }
 
-        baseObject[baseClass.className].apply(this, arguments)
-    }
-
-
-    for (var propName in newInstance)
-    {
-        if (propName !== subClass.className && typeof newInstance[propName] === "function" && typeof baseObject[propName] === "function") {
-
-            newInstance.super[propName] = _superFactory(propName,baseObject);
-        }
-    }
-
-    function _superFactory(name,baseObject) {
-        return function () {
-
-            var superFunction = baseObject[name];
-            var ret = superFunction.apply(baseObject, arguments);
-            return ret;
-        };
-    }
-
-    //calling the super function
-
-    if (!isBaseClassConstruction) {
-
-        if (!newInstance[subClass.className]) {
-            newInstance[subClass.className] = function () {
-                newInstance.super.apply(newInstance, constructorArguments);
+        function superFunctionFactory(propName, fn, superFunction)
+        {
+            return function(){
+                var temp = this.super;
+                this.super[propName] = (function(context){
+                    return function(){
+                        superFunction.apply(context,arguments);
+                    }
+                })(this);
+                var ret = fn.apply(this, arguments);
+                this.super = temp;
+                return ret;
             }
         }
-
-        newInstance[subClass.className].apply(newInstance, constructorArguments);
     }
+
+    RClass.prototype = baseClassInstance;
+
+    var newInstance = new RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction)
 
     return newInstance;
+
 }
 
 var Dictionary = function () {

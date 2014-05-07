@@ -6,11 +6,15 @@ demoLibrary.skins(
 );
 
 demoLibrary.Class("TestModel")(function () {
-    var superCount = 0;
-    this.TestModel = function () {
-        //console.log(superCount);
-        superCount++;
-    };
+
+    var _testProp = "super"
+    this.get("testProp", function(){
+        return _testProp;
+    })
+
+    this.set("testProp", function(value){
+        _testProp = value;
+    })
 
 });
 
@@ -23,9 +27,16 @@ demoLibrary.Class("MyEvent").extends($r.Class("Event"))(function () {
 });
 
 demoLibrary.Class("TestModel1").extends(demoLibrary.Class("TestModel"))(function () {
-    this.TestModel1 = function () {
-        this.super();
-    };
+
+    var _baseTestProp = "Base"
+    this.get("testProp", function(){
+        return _baseTestProp + this.super.testProp;
+    })
+
+    this.set("testProp", function(value){
+        this.super.testProp = value;
+        _baseTestProp = "humm";
+    })
 
 });
 
@@ -66,6 +77,9 @@ demoLibrary.Class("MainContainer").extends($r.Class("SkinnableContainer"))(funct
 
     function handleTestButtonClick(clickEvent) {
 
+        console.log(testModel1.testProp);
+        testModel1.testProp = "wow";
+        console.log(testModel1.testProp);
         var customEvent = demoLibrary.new("MyEvent");
 
         testingEventDispatcher.dispatchEvent(customEvent.eventObject);
@@ -87,9 +101,23 @@ demoLibrary.Class("MainContainer").extends($r.Class("SkinnableContainer"))(funct
 
 $r.Class("MainComponent").extends($r.Class("SkinnableComponent"))(function () {
 
+    this.MainComponent = function(){
+        this.super();
+        console.log("I am MainComponent")
+    };
     this.skinClass = demoLibrary.skinClass("MainComponentSkin");
 
     this.skinParts = [];
+
+    var _testAttr = ""
+
+    this.get("testAttr", function () {
+        return _testAttr;
+    });
+
+    this.set("testAttr", function (newValue) {
+        _testAttr = newValue;
+    })
 
     this.partAdded = function (partName, instance) {
         this.super.partAdded(partName, instance);
