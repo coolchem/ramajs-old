@@ -1,8 +1,8 @@
-<div comp="Skin">
+<div>
     <states>
-        <state name="Open"></state>
-        <state name="Close"></state>
+        <state name="open"></state>
+        <state name="close"></state>
     </states>
     <button compid="testButton">Test Button</button>
-    <div style.Close="display:none" style.Open="display:''" comp="Group" compid="contentGroup"></div>
+    <div display.open="" display.close="none" comp="$r.Group" compid="contentGroup"></div>
 </div>

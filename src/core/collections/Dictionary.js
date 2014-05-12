@@ -35,6 +35,18 @@ $r.Class("Dictionary")(function(){
         }
     };
 
+    this.hasKey = function(key){
+        var item = getKeyItem(key);
+        if(item !== undefined)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     function getKeyItem(key){
 
         for(var i = 0; i<dictionaryArray.length; i++)

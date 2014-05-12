@@ -6,7 +6,9 @@ $r.Class("EventDispatcher")(function () {
     };
 
     this.addEventListener = function (type, listener, useCapture) {
-        this[0].addEventListener.apply(this[0], arguments);
+        if($r.isDefined(listener))
+            listener = $r.bindFunction(listener, this);
+        this[0].addEventListener(type,listener,useCapture);
     };
 
     this.removeEventListener = function (type, listener, useCapture) {

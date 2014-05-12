@@ -1,9 +1,16 @@
 "use strict";
 
+var $r;
+var packages = {};
+var classes = {};
+var skins = {};
+
+
+$r = window.$r = constructPackage(PACKAGE_RAMA);
 
 var Class
-(function(){
-    Class = function(){
+(function () {
+    Class = function () {
 
     };
     Class.className = "Class";
@@ -28,23 +35,22 @@ var Class
 
 })();
 
-var libraryDictionary = {};
+function rPackage(packageName) {
 
-
-var library = function (libraryName) {
-
-    var library = libraryDictionary[libraryName];
-    if (library)
-        return library;
+    var rPackage = packages[packageName];
+    if (rPackage)
+        return rPackage;
     else {
-        return constructLibrary(libraryName);
+        return constructPackage(packageName);
     }
-};
+}
+;
 
-var Application = function (applicationname, constructor) {
+function Application(applicationname, constructor) {
 
-    createClassItem(applicationname, $r, constructor, $r.$$classDictionary[APPLICATION]);
-};
+    createClassItem(applicationname, $r, constructor, classes[APPLICATION]);
+}
+;
 
 
 function initApplications() {
@@ -53,7 +59,7 @@ function initApplications() {
 
     for (var i = 0; i < appNodes.length; i++) {
         var appNode = appNodes[i];
-        var application = $r.ClassFactory(appNode.getAttribute(R_APP));
+        var application = classFactory(getQualifiedName($r,appNode.getAttribute(R_APP)));
 
         if (application) {
             initApplication(application, appNode)
@@ -80,73 +86,45 @@ function ApplicationManager(applicationClass, rootNode) {
 
     this.initialize = function () {
 
-        this.application = $r.$$componentUtil.createComponent(rootNode, appClass);
+        this.application = new appClass();
         this.application.applicationManager = this;
         var parentNode = rootNode.parentNode;
         parentNode.replaceChild(this.application[0], rootNode);
         this.application.initialize();
-        this.application.inValidate();
     }
 
 }
 
 //core functions
-function constructLibrary(libraryName) {
+function constructPackage(packageName) {
 
-    var library = {};
+    var rPackage = {};
+    rPackage.packageName = packageName;
 
-    library.$$classDictionary = {};
-    library.libraryName = libraryName;
-
-    library.$skins = {};
-
-
-    library.skins = function () {
+    rPackage.skins = function () {
 
         for (var i in arguments) {
             var skinItem = arguments[i];
-            library.$skins[skinItem.skinClass] = skinItem;
+            skins[getQualifiedName(rPackage, skinItem.skinClass)] = skinItem;
         }
     };
 
-    library.skinClass = function (className) {
-
-        var skinClassItem = library.$skins[className];
-
-        if (skinClassItem === null || skinClassItem === undefined || skinClassItem.skinClass === null || skinClassItem.skinClass === "") {
-            throw new ReferenceError("Skin Class Note Found Exception: The requested Skin Class " + className + " could not be found\n" +
-                    "Please Make sure it is registered properly in the library ");
-        }
-        else {
-            return library.libraryName + ":" + className;
-        }
-
-
-    };
-
-    library.Class = function (className) {
+    rPackage.Class = function (className) {
 
         if (className !== undefined && className !== null && className !== "") {
-            var classItem = library.$$classDictionary[className];
+
+            var qualifiedClassName = getQualifiedName(rPackage, className);
+            var classItem = classes[qualifiedClassName];
 
             if (classItem === null || classItem === undefined) {
 
-                //this means the class has never been register in the library so
-                //so register the Class into library
-                createClassItem(className, library);
+                //this means the class has never been register in the package so
+                //so register the Class into package
+                createClassItem(className, rPackage);
             }
 
-            classItem = library.$$classDictionary[className];
-
-            //1.when i get class name, I need to register the class somewhere
-
-            //2.then return a function so user can register a constructor class for the given classname
-
-            //3.also the return function should have an extend function which take the argument of a return value of requesting a class name which is essentially a constructor
-
-            //4.the extend function should then register that constructor as base class for the class registered in step 2
-
-            return getLibraryReturnFunction(classItem);
+            classItem = classes[qualifiedClassName];
+            return getPackageReturnFunction(classItem);
         }
         else {
             throw new ReferenceError("Class Name not specified exception: The Class Name value was specified as 'undefined' or 'null' or an empty string");
@@ -155,64 +133,111 @@ function constructLibrary(libraryName) {
 
     };
 
-    library.ClassFactory = function (className) {
+    rPackage.new = function (className, constructorArguments) {
 
-        var classItem = library.$$classDictionary[className];
-
-        if (classItem === null || classItem === undefined || classItem.classConstructor === null || classItem.classConstructor === undefined) {
-            throw new ReferenceError("Class Note Found Exception: The requested Class " + className + " could not be found\n" +
-                    "Please Make sure it is registered in the library ");
-        }
-        else {
-
-            var baseClass;
-            if (classItem.superClassItem !== null && classItem.superClassItem !== undefined) {
-                baseClass = classItem.superClassItem.library.ClassFactory(classItem.superClassItem.name);
-                baseClass.className = classItem.superClassItem.name;
-            }
-            else {
-
-                baseClass = Class;
-            }
-
-            var subClass = classItem.classConstructor;
-            subClass.className = className;
-
-
-            return function () {
-                var constructorArguments = null;
-                var isBaseClassConstruction = false;
-
-                if (arguments[0] !== undefined) {
-                    if (arguments[0] === true) {
-                        isBaseClassConstruction = true;
-                    }
-                    else {
-                        constructorArguments = arguments[0];
-                    }
-                }
-                return constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction);
-            };
-        }
-    };
-
-    library.new = function (className, constructorArguments) {
-
-        var classConstructor = library.ClassFactory(className);
-
+        var classConstructor = classFactory(getQualifiedName(rPackage, className));
         return new classConstructor(constructorArguments);
 
     };
 
-    libraryDictionary[libraryName] = library;
+    packages[packageName] = rPackage;
 
-    return library;
+    return rPackage;
 
 }
 
-function createClassItem(className, library, classConstructor, superClassItem) {
+function getQualifiedName(rPackage, className) {
+    return rPackage.packageName + "." + className
+}
+
+//qualified class name is full path to the Class [packageName][className]
+function classFactory(qualifiedClassName) {
+
+    var classItem = classes[qualifiedClassName];
+
+    if (classItem === null || classItem === undefined || classItem.classConstructor === null || classItem.classConstructor === undefined) {
+        throw new ReferenceError("Class Note Found Exception: The requested Class " + qualifiedClassName + " could not be found\n" +
+                "Please Make sure it is registered in the package ");
+    }
+    else {
+
+        var baseClass;
+        if (classItem.superClassItem !== null && classItem.superClassItem !== undefined) {
+            baseClass = classFactory(classItem.superClassItem.qualifiedClassName);
+            baseClass.className = classItem.superClassItem.className;
+        }
+        else {
+
+            baseClass = Class;
+        }
+
+        var subClass = classItem.classConstructor;
+        subClass.className = classItem.className;
+
+
+        return function () {
+            var constructorArguments = null;
+            var isBaseClassConstruction = false;
+
+            if (arguments[0] !== undefined) {
+                if (arguments[0] === true) {
+                    isBaseClassConstruction = true;
+                }
+                else {
+                    constructorArguments = arguments[0];
+                }
+            }
+            return constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction);
+        };
+    }
+}
+
+function skinFactory(qualifiedCLassName) {
+    var skinNode = null;
+
+    var skinClassItem = skins[qualifiedCLassName];
+
+    if (skinClassItem === null || skinClassItem === undefined || skinClassItem.skinClass === null || skinClassItem.skinClass === "") {
+        throw new ReferenceError("Skin Class Note Found Exception: The requested Skin Class " + qualifiedCLassName + " could not be found\n" +
+                "Please Make sure it is registered properly in the package ");
+    }
+    else {
+        var tempDiv = document.createElement('div');
+        if (!skinClassItem.skin || skinClassItem.skin !== "") {
+            if (skinClassItem.skinURL && skinClassItem.skinURL !== "") {
+
+                skinClassItem.skin = getRemoteSkin(skinClassItem.skinURL);
+            }
+        }
+
+        tempDiv.innerHTML = skinClassItem.skin;
+        skinNode = tempDiv.children[0];
+        tempDiv.removeChild(skinNode);
+    }
+
+    return skinNode;
+}
+
+function getRemoteSkin(skinURL) {
+
+    var xmlhttp;
+    if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+        xmlhttp = new XMLHttpRequest();
+    }
+    else {// code for IE6, IE5
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+
+    xmlhttp.open("GET", skinURL, false);
+    xmlhttp.send();
+
+    return xmlhttp.responseText;
+}
+
+function createClassItem(className, rPackage, classConstructor, superClassItem) {
     var newClassItem = {};
-    newClassItem.name = className;
+    newClassItem.className = className;
+    newClassItem.qualifiedClassName = getQualifiedName(rPackage, className);
     if (classConstructor === null || classConstructor === undefined) {
         newClassItem.classConstructor = Class;
     }
@@ -229,11 +254,11 @@ function createClassItem(className, library, classConstructor, superClassItem) {
         newClassItem.superClassItem = superClassItem;
     }
 
-    newClassItem.library = library;
-    library.$$classDictionary[className] = newClassItem;
+    newClassItem.package = rPackage;
+    classes[newClassItem.qualifiedClassName] = newClassItem;
 }
 
-function getLibraryReturnFunction(classItem) {
+function getPackageReturnFunction(classItem) {
 
     var returnFunction = function (constructor) {
 
@@ -261,7 +286,6 @@ function getLibraryReturnFunction(classItem) {
 }
 
 
-
 function constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction) {
 
     var baseClassInstance = new baseClass(true);
@@ -269,93 +293,72 @@ function constructClass(subClass, baseClass, constructorArguments, isBaseClassCo
     subclassInstance.classNameString = subClass.className;
 
 
-    function RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction){
+    function RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction) {
 
-       this.super = function(){
-           if(baseClassInstance[baseClassInstance.classNameString])
-               baseClassInstance[baseClassInstance.classNameString].apply(baseClassInstance,arguments);
-       }
-
-       this[subclassInstance.classNameString] = function()
-       {
-           if(subclassInstance[subclassInstance.classNameString])
-               subclassInstance[subclassInstance.classNameString].apply(this, arguments);
-           else
-               this.super.apply(this,arguments)
-       }
-
-        for(var propName in subclassInstance)
-        {
-           if(propName !== subclassInstance.classNameString)
-           {
-               var propertyDescriptor = Object.getOwnPropertyDescriptor(subclassInstance, propName);
-               if(propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set")))
-               {
-                   var newPrototypeDescripter = {};
-                   var basePropertyDescriptor = Object.getOwnPropertyDescriptor(baseClassInstance, propName)
-                   for (var descriptorName in propertyDescriptor)
-                   {
-                       if(basePropertyDescriptor !== undefined && basePropertyDescriptor.hasOwnProperty(descriptorName))
-                       {
-                           if(typeof propertyDescriptor[descriptorName] === "function" && typeof basePropertyDescriptor[descriptorName] === "function")
-                           {
-                               newPrototypeDescripter[descriptorName] = getterSetterSuperFunctionFactory(propName,propertyDescriptor[descriptorName],basePropertyDescriptor[descriptorName],descriptorName)
-                           }
-                           else
-                           {
-                               newPrototypeDescripter[descriptorName] = basePropertyDescriptor[descriptorName];
-                           }
-                       }
-                       else
-                       {
-                           newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName];
-                       }
-
-                   }
-                   Object.defineProperty(this, propName, newPrototypeDescripter);
-               }
-               else if(typeof subclassInstance[propName] === "function" && typeof baseClassInstance[propName] === "function")
-               {
-                   this[propName] = superFunctionFactory(propName,subclassInstance[propName],baseClassInstance[propName]);
-
-               }
-               else
-               {
-                   this[propName] = subclassInstance[propName];
-
-               }
-           }
+        this.super = function () {
+            if (baseClassInstance[baseClassInstance.classNameString])
+                baseClassInstance[baseClassInstance.classNameString].apply(baseClassInstance, arguments);
         }
 
-        if(!isBaseClassConstruction)
-        {
+        this[subclassInstance.classNameString] = function () {
+            if (subclassInstance[subclassInstance.classNameString])
+                subclassInstance[subclassInstance.classNameString].apply(this, arguments);
+            else
+                this.super.apply(this, arguments)
+        }
+
+        for (var propName in subclassInstance) {
+            if (propName !== subclassInstance.classNameString) {
+                var propertyDescriptor = Object.getOwnPropertyDescriptor(subclassInstance, propName);
+                if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
+                    var newPrototypeDescripter = {};
+                    var basePropertyDescriptor = Object.getOwnPropertyDescriptor(baseClassInstance, propName)
+                    for (var descriptorName in propertyDescriptor) {
+                        if (basePropertyDescriptor !== undefined && basePropertyDescriptor.hasOwnProperty(descriptorName)) {
+                            if (typeof propertyDescriptor[descriptorName] === "function" && typeof basePropertyDescriptor[descriptorName] === "function") {
+                                newPrototypeDescripter[descriptorName] = getterSetterSuperFunctionFactory(propName, propertyDescriptor[descriptorName], basePropertyDescriptor[descriptorName], descriptorName)
+                            }
+                            else {
+                                newPrototypeDescripter[descriptorName] = basePropertyDescriptor[descriptorName];
+                            }
+                        }
+                        else {
+                            newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName];
+                        }
+
+                    }
+                    Object.defineProperty(this, propName, newPrototypeDescripter);
+                }
+                else if (typeof subclassInstance[propName] === "function" && typeof baseClassInstance[propName] === "function") {
+                    this[propName] = superFunctionFactory(propName, subclassInstance[propName], baseClassInstance[propName]);
+
+                }
+                else {
+                    this[propName] = subclassInstance[propName];
+
+                }
+            }
+        }
+
+        if (!isBaseClassConstruction) {
             this[subclassInstance.classNameString].apply(this, constructorArguments);
         }
 
-        function getterSetterSuperFunctionFactory(propName, fn, superFunction,type,baseClassInstance)
-        {
-            return function(){
+        function getterSetterSuperFunctionFactory(propName, fn, superFunction, type, baseClassInstance) {
+            return function () {
                 var temp = this.super;
-                if(type === "get")
-                {
+                if (type === "get") {
                     Object.defineProperty(this.super, propName,
-                            {   get:contextFunction(superFunction, this),
+                            {   get:bindFunction(superFunction, this),
                                 enumerable:true,
                                 configurable:true
                             });
-                }else if(type === "set")
-                {
+                } else if (type === "set") {
                     Object.defineProperty(this.super, propName,
-                            {   set:contextFunction(superFunction, this),
+                            {   set:bindFunction(superFunction, this),
                                 enumerable:true,
                                 configurable:true
                             });
-                }
-
-                function contextFunction(fn,context){
-                    return function(){
-                        return superFunction.apply(this, arguments);
-                    }
                 }
 
                 var ret = fn.apply(this, arguments);
@@ -364,13 +367,12 @@ function constructClass(subClass, baseClass, constructorArguments, isBaseClassCo
             }
         }
 
-        function superFunctionFactory(propName, fn, superFunction)
-        {
-            return function(){
+        function superFunctionFactory(propName, fn, superFunction) {
+            return function () {
                 var temp = this.super;
-                this.super[propName] = (function(context){
-                    return function(){
-                        superFunction.apply(context,arguments);
+                this.super[propName] = (function (context) {
+                    return function () {
+                        superFunction.apply(context, arguments);
                     }
                 })(this);
                 var ret = fn.apply(this, arguments);
@@ -388,49 +390,34 @@ function constructClass(subClass, baseClass, constructorArguments, isBaseClassCo
 
 }
 
-var Dictionary = function () {
+function isDefined(value) {
+    return typeof value !== 'undefined';
+}
 
-    var dictionary = {};
-    var dictionaryArray = [];
-
-    dictionary.get = function (key) {
-
-        var item = getKeyItem(key);
-        if (item !== undefined) {
-            return item.value;
-        }
-    };
-    dictionary.put = function (key, value) {
-
-        var item = getKeyItem(key);
-        if (item !== undefined) {
-            item.value = value;
-        }
-        else {
-            dictionaryArray.push({key:key, value:value});
-        }
-    };
-
-    dictionary.remove = function (key) {
-        for (var i = 0; i < dictionaryArray.length; i++) {
-            var item = dictionaryArray[i];
-            if (item.key === key) {
-                dictionaryArray.splice(i, 1);
-                break;
-            }
-        }
-    };
-
-    function getKeyItem(key) {
-
-        for (var i = 0; i < dictionaryArray.length; i++) {
-            var item = dictionaryArray[i];
-            if (item.key === key) {
-                return item;
-            }
-        }
-
+function bindFunction(fn, context) {
+    return function () {
+        return fn.apply(context, arguments);
     }
+}
 
-    return dictionary;
-};
+function camelCase(name) {
+    return name.
+            replace(SPECIAL_CHARS_REGEXP,function (_, separator, letter, offset) {
+                return offset ? letter.toUpperCase() : letter;
+            }).
+            replace(MOZ_HACK_REGEXP, 'Moz$1');
+}
+
+function cleanWhitespace(node) {
+    for (var i = 0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if (child.nodeType == 3 && !/\S/.test(child.nodeValue)) {
+            node.removeChild(child);
+            i--;
+        }
+        if (child.nodeType == 1) {
+            cleanWhitespace(child);
+        }
+    }
+    return node;
+}

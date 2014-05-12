@@ -12,12 +12,12 @@ $r.skins(
         {skinClass:'AppSkin', skinURL:"appSkin.html"}
 );
 
-$r.Application('testApplication', function()
+$r.Application('TestApplication', function()
 {
-    this.testApplication = function(){
+    this.TestApplication = function(){
         this.super();
     }
-    this.skinClass = $r.skinClass("AppSkin");
+    this.skinClass = "$r.AppSkin";
 
     this.skinParts = [{id:'mainComponent', required:true}];
 

@@ -1,78 +1,86 @@
-$r.Class("Component").extends($r.Class("EventDispatcher"))(function () {
+$r.Class("Component").extends($r.Class("ComponentBase"))(function () {
 
-    this.compid = "";
-    this.comp = "";
-    this.initialized = false;
+    var _skinElement = null;
 
-    this.elements = [];
+    var _skinClass;
 
-    this.parentComponent = null;
+    this.get("skinClass", function () {
+        return _skinClass;
+    })
 
-    this.Component = function () {
+    this.set("skinClass", function (newValue) {
+        _skinClass = newValue;
+    })
 
-        this[0] = document.createElement("div");
-    };
+    var _skinParts = [];
+    this.get("skinParts", function () {
+        return _skinParts;
+    })
 
-    this.find = function(selector){
-        return $r.find(selector, this[0]);
-    };
+    this.set("skinParts", function (newValue) {
+        defineSkinParts(newValue);
+    })
 
-    this.initialize = function () {
+    function defineSkinParts(skinPartss) {
 
-        if (this.initialized)
-            return;
-        this.$$createChildren();
-        this.$$childrenCreated();
+        for (var i = 0; i < skinPartss.length; i++) {
+            _skinParts.push(skinPartss[i]);
+        }
 
-        this.initialized = true;
-    };
+    }
 
-    this.inValidate = function () {
+    var _currentState = "";
 
-    };
+    this.get("currentState",function(){
+        return _currentState
 
-    this.addElement = function (element) {
-        element.parentComponent = this;
-        element.initialize();
-        this.elements.push(element);
-        this[0].appendChild(element[0])
-    };
+    })
 
-    this.removeElement = function (element) {
-
-        this[0].removeChild(element[0]);
-    };
-
-    this.replaceElement = function (element) {
-
-        this[0].replaceChild(element);
-    };
-
-    this.hasAttribute = function(name){
-
-        return this[0].hasAttribute(name);
-    };
-
-    this.getAttribute = function(name){
-
-        return this[0].getAttribute(name);
-    };
-
-
-    this.setAttribute = function(name, value){
-
-        return this[0].setAttribute(name, value);
-    };
-
-
+    this.set("currentState",function(value){
+        _currentState = value;
+        _skinElement.currentState = value;
+    })
 
     this.$$createChildren = function () {
-
+        attachSkin(this);
     };
-
 
     this.$$childrenCreated = function () {
+        this.super.$$childrenCreated();
+        findSkinParts(this);
     };
 
+
+    function attachSkin(_this) {
+
+        _skinElement = $r.new("Skin",[_this.skinClass]);
+        _this.addElement(_skinElement);
+    }
+
+
+    this.partAdded = function (partName, instance) {
+        //Override this method to add functionality to various skin component
+    };
+
+    function findSkinParts(_this) {
+        if (_skinElement) {
+            for (var j = 0; j < _this.skinParts.length; j++) {
+                var skinPart = _this.skinParts[j];
+                var skinPartFound = false;
+
+                var skinPartElement = _skinElement.getSkinPart(skinPart.id);
+
+                if (skinPartElement) {
+                    skinPartFound = true;
+                    _this[skinPart.id] = skinPartElement;
+                    _this.partAdded(skinPart.id, skinPartElement)
+                }
+
+                if (skinPart.required === true && !skinPartFound) {
+                    throw new ReferenceError("Required Skin part not found: " + skinPart.id + " in " + _this.skin);
+                }
+            }
+        }
+    }
 
 });

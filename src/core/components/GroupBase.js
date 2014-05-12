@@ -1,9 +1,5 @@
-$r.Class("GroupBase").extends($r.Class("Component"))(function () {
+$r.Class("GroupBase").extends($r.Class("ComponentBase"))(function () {
 
-
-    var classUtil = $r.$$classUtil;
-
-    var componentUtil = $r.$$componentUtil;
 
     var _htmlContent = [];
 
@@ -23,21 +19,14 @@ $r.Class("GroupBase").extends($r.Class("Component"))(function () {
         if (this.htmlContent.length > 0) {
             for (var i = 0; i < this.htmlContent.length; i++) {
 
-                this.$createAndAddChild(this.htmlContent[i]);
+                this.addElement(this.htmlContent[i]);
             }
         }
     };
 
-    this.$createAndAddChild = function(componentNode){
-            var componentClassName = componentNode.getAttribute(componentUtil.R_COMP);
-            var comp = componentUtil.createComponent(componentNode, classUtil.classFactory(componentClassName));
-            this.addElement(comp);
-            return comp;
-    };
-
     function setHTMLContent(_this) {
         if (_this.initialized) {
-            _this[0].innerHTML = "";
+            _this.removeAllElements();
             _this.$$createChildren();
         }
     }

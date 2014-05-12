@@ -1,4 +1,4 @@
-$r.Class("SkinnableContainer").extends($r.Class("SkinnableComponent"))(function () {
+$r.Class("Container").extends($r.Class("Component"))(function () {
 
     var _htmlContent = [];
     this.get("htmlContent", function () {
