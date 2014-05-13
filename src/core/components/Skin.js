@@ -125,11 +125,27 @@ $r.Class("Skin").extends($r.Class("GroupBase"))(function () {
             component.innerHTML = "";
             for (var i = 0; i < node.children.length; i++) {
                 var childNode = node.children[i];
-                var childComponent = compileHTMLNode(childNode);
-                if(component.htmlContent)
+
+                //checking if tag name matches a property name in the component and
+                //the property should be an array
+                var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
+                if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
                 {
-                    component.htmlContent.push(childComponent);
+                    for (var j = 0; j < childNode.children.length; j++)
+                    {
+                        component[childNodeTagName].push(compileHTMLNode(childNode.children[j]));
+                    }
+
                 }
+                else
+                {
+                    var childComponent = compileHTMLNode(childNode);
+                    if(component.htmlContent)
+                    {
+                        component.htmlContent.push(childComponent);
+                    }
+                }
+
             }
         }
 

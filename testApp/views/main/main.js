@@ -77,10 +77,6 @@ demoPackage.Class("MainContainer").extends($r.Class("Container"))(function () {
 
     function handleTestButtonClick(clickEvent) {
 
-        console.log(testModel1.testProp);
-        testModel1.testProp = "wow";
-        console.log(testModel1.testProp);
-
         if(this.currentState === "open")
         {
             this.currentState = "close";
@@ -113,26 +109,46 @@ $r.Class("MainComponent").extends($r.Class("Component"))(function () {
 
     this.MainComponent = function(){
         this.super();
-        console.log("I am MainComponent")
     };
     this.skinClass = "demoPackage.MainComponentSkin";
 
-    this.skinParts = [];
+    this.skinParts = [
+        {id:'contentGroup', required:true},
+        {id:'contentGroup1', required:true}
+    ];
 
-    var _testAttr = ""
+    var _myHTMLContent = []
 
-    this.get("testAttr", function () {
+    this.get("myHtmlContent", function () {
 
-        return _testAttr;
+        return _myHTMLContent;
     });
 
-    this.set("testAttr", function (newValue) {
-        _testAttr = newValue;
-        console.log(_testAttr);
+    this.set("myHtmlContent", function (newValue) {
+        _myHTMLContent = newValue;
+    })
+
+    var _myHTMLContent1 = []
+
+    this.get("myHtmlContent1", function () {
+
+        return _myHTMLContent1;
+    });
+
+    this.set("myHtmlContent1", function (newValue) {
+        _myHTMLContent1 = newValue;
     })
 
     this.partAdded = function (partName, instance) {
         this.super.partAdded(partName, instance);
+
+        if (instance === this.contentGroup) {
+            this.contentGroup.htmlContent = _myHTMLContent;
+        }
+
+        if (instance === this.contentGroup1) {
+            this.contentGroup1.htmlContent = _myHTMLContent1;
+        }
     };
 
 });
