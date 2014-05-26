@@ -1,4 +1,4 @@
-$r.Class("Skin").extends($r.Class("GroupBase"))(function () {
+$r.Skin = extend("Group",function () {
 
     var STATES = "states";
 
@@ -29,8 +29,8 @@ $r.Class("Skin").extends($r.Class("GroupBase"))(function () {
         }
     })
 
-    this.Skin = function(skinClass){
-         this.super();
+    this.classConstructor = function(skinClass){
+        this.super();
         compileSkin($r.skinFactory(skinClass),this);
     }
 
@@ -68,7 +68,7 @@ $r.Class("Skin").extends($r.Class("GroupBase"))(function () {
                         var stateNode = childNode.children[j];
                         if(stateNode.getAttribute("name") !== null && stateNode.getAttribute("name") !== undefined)
                         {
-                            var state = $r.new("State", [stateNode.getAttribute("name"), stateNode.getAttribute("stateGroups")]);
+                            var state = new $r.State(stateNode.getAttribute("name"), stateNode.getAttribute("stateGroups"));
                             skinStates[state.name] = state;
                         }
                     }
@@ -106,7 +106,7 @@ $r.Class("Skin").extends($r.Class("GroupBase"))(function () {
             component = new componentClass();
         }
         else {
-            component = $r.new("Group");
+            component = new $r.Group();
             component[0] = node;
         }
 
@@ -181,4 +181,4 @@ $r.Class("Skin").extends($r.Class("GroupBase"))(function () {
 
     }
 
-});
+})

@@ -1,4 +1,5 @@
-$r.Class("ComponentBase").extends($r.Class("EventDispatcher"))(function () {
+
+$r.ComponentBase = extend("EventDispatcher", function () {
 
 
     this.compid = "";
@@ -6,6 +7,15 @@ $r.Class("ComponentBase").extends($r.Class("EventDispatcher"))(function () {
     this.initialized = false;
 
     var _elements = [];
+
+    this.get("textContent",function(){
+        return this[0].textContent;
+
+    })
+
+    this.set("textContent",function(value){
+        this[0].textContent = value;
+    })
 
     this.get("elements",function(){
         return _elements
@@ -42,7 +52,7 @@ $r.Class("ComponentBase").extends($r.Class("EventDispatcher"))(function () {
         this.setStyle("display", _display);
     })
 
-    this.ComponentBase = function () {
+    this.classConstructor = function () {
 
         this[0] = document.createElement("div");
     };
@@ -97,25 +107,26 @@ $r.Class("ComponentBase").extends($r.Class("EventDispatcher"))(function () {
 
     this.setAttribute = function(name, value)
     {
-       var nameAndState = name.split('.');
-       var propertyName = $r.camelCase(nameAndState[0].toLowerCase());
-       if(typeof this[propertyName] !== "function")
-       {
-           if(nameAndState.length === 1)
-           {
-               this[0].setAttribute(nameAndState[0], value);
-               this[propertyName] = value;
-           }
-       }
+        var nameAndState = name.split('.');
+        var propertyName = $r.camelCase(nameAndState[0].toLowerCase());
+        if(typeof this[propertyName] !== "function")
+        {
+            if(nameAndState.length === 1)
+            {
+                this[0].setAttribute(nameAndState[0], value);
+                this[propertyName] = value;
+            }
+        }
     };
 
     this.setStyle = function(styleName, value){
-           this[0].style[styleName] = value;
+        this[0].style[styleName] = value;
     }
 
     this.getStyle = function(styleName){
         return this[0].style[styleName];
     }
+
 
     this.$$createChildren = function () {
 
@@ -123,8 +134,16 @@ $r.Class("ComponentBase").extends($r.Class("EventDispatcher"))(function () {
 
 
     this.$$childrenCreated = function () {
+
+        this.$$updateDisplay();
+
     };
 
+    this.$$updateDisplay = function(){
 
 
-});
+    }
+
+
+
+})

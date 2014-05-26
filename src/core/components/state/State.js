@@ -1,10 +1,11 @@
-$r.Class("State").extends($r.Class("EventDispatcher"))(function () {
+
+$r.State = extend("EventDispatcher", function () {
 
     var _stateManagedComponents = [];
     var _name;
     this.get('name', function(){
 
-      return _name;
+        return _name;
     });
 
     var _stateGroups;
@@ -13,7 +14,7 @@ $r.Class("State").extends($r.Class("EventDispatcher"))(function () {
         return _stateGroups;
     });
 
-    this.State = function(name,stateGroups){
+    this.classConstructor = function(name,stateGroups){
         this.super();
         _name = name;
         _stateGroups = stateGroups;
@@ -40,4 +41,4 @@ $r.Class("State").extends($r.Class("EventDispatcher"))(function () {
 
     }
 
-});
+})

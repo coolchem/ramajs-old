@@ -4,5 +4,8 @@
          initApplications();
     }
 
+    //now freezing the $r package
+   //Object.freeze($r);
+
 
 })(window, document);

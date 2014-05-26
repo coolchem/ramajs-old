@@ -1,8 +1,13 @@
 <div>
     <states>
-        <state name="open"></state>
+        <state name="open" ></state>
+        <state name="openStateGroupTest"></state>
         <state name="close"></state>
     </states>
     <button compid="testButton">Test Button</button>
-    <div display.open="" display.close="none" comp="$r.Group" compid="contentGroup"></div>
+    <div style="background-color: #0000ff;height:50px; width:50px" display.openState="none">
+        Test Div 0
+    </div>
+    <!--<div display.open="" display.close="none" comp="$r.Group" compid="contentGroup"></div>-->
+    <div comp="$r.ViewStack" compid="testViewStack"></div>
 </div>

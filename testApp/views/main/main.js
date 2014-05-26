@@ -2,10 +2,11 @@ var demoPackage = $r.package("demoPackage");
 
 demoPackage.skins(
         {skinClass:'MainContainerSkin', skinURL:"views/main/skins/mainContainerSkin.html"},
-        {skinClass:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"}
+        {skinClass:'MainComponentSkin', skinURL:"views/main/skins/mainComponentSkin.html"},
+        {skinClass:'TestItemRendererSkin', skinURL:"views/main/skins/testItemRendererSkin.html"}
 );
 
-demoPackage.Class("TestModel")(function () {
+demoPackage.TestModel = $r.extend("Class",function () {
 
     var _testProp = "super"
     this.get("testProp", function(){
@@ -18,15 +19,15 @@ demoPackage.Class("TestModel")(function () {
 
 });
 
-demoPackage.Class("MyEvent").extends($r.Class("Event"))(function () {
-    var superCount = 0;
-    this.MyEvent = function () {
+demoPackage.MyEvent = $r.extend("Event", function () {
+
+    this.classConstructor = function () {
         this.super("myEvent", true, false);
     };
 
 });
 
-demoPackage.Class("TestModel1").extends(demoPackage.Class("TestModel"))(function () {
+demoPackage.TestModel1 = $r.extend("demoPackage.TestModel", function () {
 
     var _baseTestProp = "Base"
     this.get("testProp", function(){
@@ -40,21 +41,22 @@ demoPackage.Class("TestModel1").extends(demoPackage.Class("TestModel"))(function
 
 });
 
-
-demoPackage.Class("MainContainer").extends($r.Class("Container"))(function () {
+demoPackage.MainContainer = $r.extend("Container", function () {
 
     //this.skinClass = "demoPackage.MainContainerSkin";
 
     this.skinParts = [
-        {id:'testButton', required:true}
+        {id:'testButton', required:true},
+        {id:'testViewStack', required:true}
     ];
 
     this.testButton = null;
+    this.testViewStack = null;
 
     //var testModel =  $r.new("TestModel");
-    var testModel1 = demoPackage.new("TestModel1");
+    var testModel1 = new demoPackage.TestModel1();
 
-    var testingEventDispatcher = $r.new('EventDispatcher');
+    var testingEventDispatcher = new $r.EventDispatcher();
 
     var _contentGroup = null;
 
@@ -69,14 +71,22 @@ demoPackage.Class("MainContainer").extends($r.Class("Container"))(function () {
             //handleMyEvent.bind(this);
         }
 
-        if (instance === this.contentGroup) {
-            _contentGroup = instance;
+        if (instance === this.testViewStack) {
+            this.testViewStack.htmlContent = this.htmlContent;
         }
 
     };
 
     function handleTestButtonClick(clickEvent) {
 
+        if(this.testViewStack.selectedIndex + 1 === this.testViewStack.elements.length)
+        {
+            this.testViewStack.selectedIndex = 0;
+        }
+        else
+        {
+            this.testViewStack.selectedIndex = this.testViewStack.selectedIndex + 1;
+        }
         if(this.currentState === "open")
         {
             this.currentState = "close";
@@ -102,12 +112,58 @@ demoPackage.Class("MainContainer").extends($r.Class("Container"))(function () {
             _contentGroup.display = "none";
         }
     }
-});
+})
+
+demoPackage.TestItemRenderer = $r.extend("Component", function(){
+
+    this.skinClass = "demoPackage.TestItemRendererSkin";
+
+    this.skinParts = [
+        {id:'label1'},
+        {id:'label2', required:true}
+    ];
+
+    this.label1 = null;
+    this.label2 = null;
+    var _data;
+    this.get("data", function(){
+        return _data;
+    })
+
+    this.set("data", function(value){
+        this.super.data = value;
+        _data = value;
+        if(_data)
+        {
+            if(this.label1)
+                this.label1.textContent = _data.viewid;
+            if(this.label2)
+                this.label2.textContent = _data.viewName;
+        }
+    })
+
+    this.partAdded = function (partName, instance) {
+        this.super.partAdded(partName, instance);
+
+        if(instance === this.label1)
+        {
+            if(_data)
+                this.label1.textContent = _data.viewid;
+        }
+
+        if(instance === this.label2)
+        {
+            if(_data)
+                this.label2.textContent = _data.viewName;
+        }
+    }
 
 
-$r.Class("MainComponent").extends($r.Class("Component"))(function () {
+})
 
-    this.MainComponent = function(){
+demoPackage.MainComponent = $r.extend("Component", function () {
+
+    this.classConstructor = function(){
         this.super();
     };
     this.skinClass = "demoPackage.MainComponentSkin";
@@ -151,6 +207,7 @@ $r.Class("MainComponent").extends($r.Class("Component"))(function () {
         }
     };
 
-});
+})
+
 
 

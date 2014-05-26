@@ -1,4 +1,5 @@
-$r.Class("Container").extends($r.Class("Component"))(function () {
+
+$r.Container = extend("Component", function () {
 
     var _htmlContent = [];
     this.get("htmlContent", function () {
@@ -11,7 +12,7 @@ $r.Class("Container").extends($r.Class("Component"))(function () {
     });
 
     this.skinParts = [
-        {id:'contentGroup', required:true}
+        {id:'contentGroup', required:false}
     ];
 
     this.contentGroup = null;
@@ -25,4 +26,4 @@ $r.Class("Container").extends($r.Class("Component"))(function () {
         }
     };
 
-});
+})

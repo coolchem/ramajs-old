@@ -1,4 +1,5 @@
-$r.Class("Component").extends($r.Class("ComponentBase"))(function () {
+
+$r.Component = extend("ComponentBase", function () {
 
     var _skinElement = null;
 
@@ -53,7 +54,7 @@ $r.Class("Component").extends($r.Class("ComponentBase"))(function () {
 
     function attachSkin(_this) {
 
-        _skinElement = $r.new("Skin",[_this.skinClass]);
+        _skinElement = new $r.Skin(_this.skinClass);
         _this.addElement(_skinElement);
     }
 

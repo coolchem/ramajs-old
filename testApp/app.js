@@ -8,20 +8,92 @@
 
 'use strict';
 
+
 $r.skins(
         {skinClass:'AppSkin', skinURL:"appSkin.html"}
 );
 
 $r.Application('TestApplication', function()
 {
-    this.TestApplication = function(){
+
+    this.testButton = null;
+
+    var dataProvider = new $r.ArrayList([
+        {
+            viewid:"homeView",
+            viewName:"Home",
+            iconClass:"home-icon"
+        },
+
+        {
+            viewid:"documentationView",
+            viewName:"Documentation",
+            iconClass:"doc-icon"
+        },
+
+        {
+            viewid:"tutorialsView",
+            viewName:"Tutorials",
+            iconClass:"home-icon",
+            subViews:[
+                {
+                    viewid:"helloWorld",
+                    viewName:"Hello World and much more",
+                },
+                {
+                    viewid:"todoApp",
+                    viewName:"Write a TODO App",
+                }
+            ]
+        }
+    ])
+
+    this.classConstructor = function(){
         this.super();
     }
     this.skinClass = "$r.AppSkin";
 
-    this.skinParts = [{id:'mainComponent', required:true}];
+    this.skinParts = [{id:'testButton', required:true},
+        {id:'testDataGroup', required:true}];
 
     this.mainComponent = null;
+    this.testDataGroup = null;
+
+    this.partAdded = function (partName, instance) {
+        this.super.partAdded(partName, instance);
+
+        if (instance === this.testButton) {
+            this.testButton.addEventListener('click', $r.bindFunction(handleTestButtonClick, this));
+
+            //testingEventDispatcher.addEventListener('myEvent', handleMyEvent);
+            //handleMyEvent.bind(this);
+        }
+
+        if (instance === this.testDataGroup) {
+
+            this.testDataGroup.dataProvider = dataProvider;
+        }
+    };
+
+    function handleTestButtonClick(clickEvent) {
+
+        if(this.testViewStack.selectedIndex + 1 === this.testViewStack.elements.length)
+        {
+            this.testViewStack.selectedIndex = 0;
+        }
+        else
+        {
+            this.testViewStack.selectedIndex = this.testViewStack.selectedIndex + 1;
+        }
+        if(this.currentState === "open")
+        {
+            this.currentState = "close";
+        }
+        else
+        {
+            this.currentState = "open";
+        }
+    };
 
 
 });

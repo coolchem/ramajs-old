@@ -1,4 +1,4 @@
-$r.Class("Event")(function () {
+$r.Event = extend("Class",function () {
 
     this.eventObject = null; // The custom event that will be created
 
@@ -8,7 +8,7 @@ $r.Class("Event")(function () {
         this.eventObject = document.createEventObject();
     }
 
-    this.Event = function (name, bubbles, cancellable) {
+    this.classConstructor = function (name, bubbles, cancellable) {
 
         if (document.createEvent) {
             this.eventObject.initEvent(name, bubbles, cancellable);
@@ -19,4 +19,4 @@ $r.Class("Event")(function () {
         this.eventObject.eventName = name;
     };
 
-});
+} )

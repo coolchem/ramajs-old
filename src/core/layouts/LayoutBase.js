@@ -1,4 +1,4 @@
-$r.Class("LayoutBase")(function () {
+$r.LayoutBase = extend("Class",function () {
 
     this.target = null;
 
@@ -6,5 +6,4 @@ $r.Class("LayoutBase")(function () {
 
         console.log(this.target);
     };
-
 });
