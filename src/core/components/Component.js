@@ -1,6 +1,16 @@
 
 $r.Component = extend("ComponentBase", function () {
 
+    var attachSkin,findSkinParts;
+
+    this.init = function(){
+
+        this.super.init();
+        attachSkin = $r.bindFunction(attachSkinFn, this);
+        findSkinParts = $r.bindFunction(findSkinPartsFn, this);
+
+    }
+
     var _skinElement = null;
 
     var _skinClass;
@@ -52,7 +62,7 @@ $r.Component = extend("ComponentBase", function () {
     };
 
 
-    function attachSkin(_this) {
+    function attachSkinFn(_this) {
 
         _skinElement = new $r.Skin(_this.skinClass);
         _this.addElement(_skinElement);
@@ -63,7 +73,7 @@ $r.Component = extend("ComponentBase", function () {
         //Override this method to add functionality to various skin component
     };
 
-    function findSkinParts(_this) {
+    function findSkinPartsFn(_this) {
         if (_skinElement) {
             for (var j = 0; j < _this.skinParts.length; j++) {
                 var skinPart = _this.skinParts[j];

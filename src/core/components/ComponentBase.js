@@ -6,7 +6,7 @@ $r.ComponentBase = extend("EventDispatcher", function () {
     this.comp = "";
     this.initialized = false;
 
-    var _elements = [];
+    var _elements = new $r.ArrayList();
 
     this.get("textContent",function(){
         return this[0].textContent;
@@ -52,7 +52,7 @@ $r.ComponentBase = extend("EventDispatcher", function () {
         this.setStyle("display", _display);
     })
 
-    this.classConstructor = function () {
+    this.init = function () {
 
         this[0] = document.createElement("div");
     };
@@ -74,8 +74,27 @@ $r.ComponentBase = extend("EventDispatcher", function () {
     this.addElement = function (element) {
         element.parentComponent = this;
         element.initialize();
-        this.elements.push(element);
+        this.elements.addItem(element);
         this[0].appendChild(element[0])
+    };
+
+    this.addElementAt = function (element, index) {
+
+        if(_elements.length <= 0 || index > this.elements.length-1)
+        {
+            this.addElement(element)
+            return;
+        }
+        if(index === -1)
+        {
+          index = 0
+        }
+        var refChild = _elements.source[index][0];
+        element.parentComponent = this;
+        element.initialize();
+        this.elements.addItemAt(index);
+        this[0].insertBefore(element, refChild)
+
     };
 
     this.removeElement = function (element) {
@@ -86,7 +105,7 @@ $r.ComponentBase = extend("EventDispatcher", function () {
     this.removeAllElements = function (element) {
 
         this[0].innerHTML = "";
-        this.elements = [];
+        this.elements = new $r.ArrayList();
     };
 
     this.replaceElement = function (element) {

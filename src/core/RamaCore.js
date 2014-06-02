@@ -12,12 +12,25 @@ var Class = function () {
 };
 
 Class.prototype.isA = function(constructorFunction){
-   if(this.constructor === constructorFunction)
-   {
-       return true;
-   }
 
-    return false;
+}
+
+Class.prototype.get = function (propertyName, getter) {
+
+    Object.defineProperty(this, propertyName,
+            {   get:getter,
+                enumerable:true,
+                configurable:true
+            });
+}
+
+Class.prototype.set = function (propertyName, setter) {
+
+    Object.defineProperty(this, propertyName,
+            {   set:setter,
+                enumerable:true,
+                configurable:true
+            });
 }
 
 $r.Class = Class;
@@ -34,17 +47,17 @@ function rPackage(packageName) {
 
 function extend(baseClassName, constructor){
 
+    constructor.prototype = new Class();
     return function(){
 
         var baseClass = classFactory(baseClassName);
-        preProcessClassConstructors(constructor)
         var subClass  = constructor;
 
         var constructorArguments = null;
         var isBaseClassConstruction = false;
 
-        if (arguments[0] !== undefined) {
-            if (arguments[0] === true) {
+        if ( arguments.length > 0 && arguments[0] !== undefined) {
+            if (arguments[0] === "isBaseClassConstruction") {
                 isBaseClassConstruction = true;
             }
             else {
@@ -52,31 +65,16 @@ function extend(baseClassName, constructor){
             }
         }
 
-        return constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction)
+        var instance =  constructClass(subClass, baseClass)
+
+        if(!isBaseClassConstruction && instance.init)
+        {
+            instance.init.apply(instance, constructorArguments);
+        }
+
+        return instance
 
     }
-}
-
-function preProcessClassConstructors(constructor){
-
-    constructor.prototype.get = function (propertyName, getter) {
-
-        Object.defineProperty(this, propertyName,
-                {   get:getter,
-                    enumerable:true,
-                    configurable:true
-                });
-    }
-
-    constructor.prototype.set = function (propertyName, setter) {
-
-        Object.defineProperty(this, propertyName,
-                {   set:setter,
-                    enumerable:true,
-                    configurable:true
-                });
-    }
-
 }
 
 //qualified class name is full path to the Class [packageName][className]
@@ -98,105 +96,89 @@ function classFactory(qualifiedClassName) {
     return classConstructor;
 }
 
-function constructClass(subClass, baseClass, constructorArguments, isBaseClassConstruction) {
+function constructClass(subClass, baseClass, constructorArguments) {
 
-    var baseClassInstance = new baseClass(true);
+    var baseClassInstance = new baseClass("isBaseClassConstruction");
     var subclassInstance = new subClass();
-
-    function RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction) {
-
-        this.super = function () {
-            if (baseClassInstance.classConstructor)
-                    baseClassInstance.classConstructor.apply(baseClassInstance, arguments);
-        }
-
-        this.classConstructor = function () {
-            if (subclassInstance.classConstructor)
-                   subclassInstance.classConstructor.apply(this, arguments);
-            else
-                this.super.apply(this, arguments)
-        }
-
-        for (var propName in subclassInstance) {
-            if (propName !== "classConstructor") {
-                var propertyDescriptor = Object.getOwnPropertyDescriptor(subclassInstance, propName);
-                if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
-                    var newPrototypeDescripter = {};
-                    var basePropertyDescriptor = Object.getOwnPropertyDescriptor(baseClassInstance, propName)
-                    for (var descriptorName in propertyDescriptor) {
-                        if (basePropertyDescriptor !== undefined && basePropertyDescriptor.hasOwnProperty(descriptorName)) {
-                            if (typeof propertyDescriptor[descriptorName] === "function" && typeof basePropertyDescriptor[descriptorName] === "function") {
-                                newPrototypeDescripter[descriptorName] = getterSetterSuperFunctionFactory(propName, propertyDescriptor[descriptorName], basePropertyDescriptor[descriptorName], descriptorName)
-                            }
-                            else {
-                                newPrototypeDescripter[descriptorName] = basePropertyDescriptor[descriptorName];
-                            }
-                        }
-                        else {
-                            newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName];
-                        }
-
-                    }
-                    Object.defineProperty(this, propName, newPrototypeDescripter);
-                }
-                else if (typeof subclassInstance[propName] === "function" && typeof baseClassInstance[propName] === "function") {
-                    this[propName] = superFunctionFactory(propName, subclassInstance[propName], baseClassInstance[propName]);
-
-                }
-                else {
-                    this[propName] = subclassInstance[propName];
-
-                }
-            }
-        }
-
-        if (!isBaseClassConstruction) {
-            this.classConstructor.apply(this, constructorArguments);
-        }
-
-        function getterSetterSuperFunctionFactory(propName, fn, superFunction, type, baseClassInstance) {
-            return function () {
-                var temp = this.super;
-                if (type === "get") {
-                    Object.defineProperty(this.super, propName,
-                            {   get:bindFunction(superFunction, this),
-                                enumerable:true,
-                                configurable:true
-                            });
-                } else if (type === "set") {
-                    Object.defineProperty(this.super, propName,
-                            {   set:bindFunction(superFunction, this),
-                                enumerable:true,
-                                configurable:true
-                            });
-                }
-
-                var ret = fn.apply(this, arguments);
-                this.super = temp;
-                return ret;
-            }
-        }
-
-        function superFunctionFactory(propName, fn, superFunction) {
-            return function () {
-                var temp = this.super;
-                this.super[propName] = (function (context) {
-                    return function () {
-                        superFunction.apply(context, arguments);
-                    }
-                })(this);
-                var ret = fn.apply(this, arguments);
-                this.super = temp;
-                return ret;
-            }
-        }
-    }
 
     RClass.prototype = baseClassInstance;
     RClass.prototype.constructor = subClass;
-    var instance = new RClass(subclassInstance, baseClassInstance, constructorArguments, isBaseClassConstruction);
 
-    return instance;
+    function RClass(){
+    }
+
+    var instance = new RClass();
+    instance.super = {};
+
+    for (var propName in subclassInstance) {
+        if (propName !== "get" && propName !== "set" && propName !== "isA") {
+            var propertyDescriptor = Object.getOwnPropertyDescriptor(subclassInstance, propName);
+            if (propertyDescriptor !== undefined && (propertyDescriptor.hasOwnProperty("get") || propertyDescriptor.hasOwnProperty("set"))) {
+                var newPrototypeDescripter = {};
+                var basePropertyDescriptor = Object.getOwnPropertyDescriptor(baseClassInstance, propName)
+                for (var descriptorName in propertyDescriptor) {
+                    if (basePropertyDescriptor !== undefined && basePropertyDescriptor.hasOwnProperty(descriptorName)) {
+                        if (typeof propertyDescriptor[descriptorName] === "function" && typeof basePropertyDescriptor[descriptorName] === "function") {
+                            newPrototypeDescripter[descriptorName] = getterSetterSuperFunctionFactory(propName, propertyDescriptor[descriptorName], basePropertyDescriptor[descriptorName], descriptorName)
+                        }
+                        else {
+                            newPrototypeDescripter[descriptorName] = basePropertyDescriptor[descriptorName];
+                        }
+                    }
+                    else {
+                        newPrototypeDescripter[descriptorName] = propertyDescriptor[descriptorName];
+                    }
+
+                }
+                Object.defineProperty(instance, propName, newPrototypeDescripter);
+            }
+            else if (typeof subclassInstance[propName] === "function" && typeof baseClassInstance[propName] === "function") {
+                instance[propName] = superFunctionFactory(propName, subclassInstance[propName], baseClassInstance[propName]);
+            }
+            else {
+                instance[propName] = subclassInstance[propName];
+
+            }
+        }
+    }
+    function getterSetterSuperFunctionFactory(propName, fn, superFunction, type, baseClassInstance) {
+        return function () {
+            var temp = this.super;
+            if (type === "get") {
+                Object.defineProperty(this.super, propName,
+                        {   get:bindFunction(superFunction, this),
+                            enumerable:true,
+                            configurable:true
+                        });
+            } else if (type === "set") {
+                Object.defineProperty(this.super, propName,
+                        {   set:bindFunction(superFunction, this),
+                            enumerable:true,
+                            configurable:true
+                        });
+            }
+
+            var ret = fn.apply(this, arguments);
+            this.super = temp;
+            return ret;
+        }
+    }
+
+    function superFunctionFactory(propName, fn, superFunction) {
+        return function () {
+            var temp = this.super;
+            this.super[propName] = (function (context) {
+                return function () {
+                    superFunction.apply(context, arguments);
+                }
+            })(this);
+            var ret = fn.apply(this, arguments);
+            this.super = temp;
+            return ret;
+        }
+    }
+
+   return instance;
 
 }
 

@@ -21,8 +21,8 @@ demoPackage.TestModel = $r.extend("Class",function () {
 
 demoPackage.MyEvent = $r.extend("Event", function () {
 
-    this.classConstructor = function () {
-        this.super("myEvent", true, false);
+    this.init = function () {
+        this.super.init("myEvent", true, false);
     };
 
 });
@@ -114,6 +114,11 @@ demoPackage.MainContainer = $r.extend("Container", function () {
     }
 })
 
+demoPackage.MyTestGroup = $r.extend("DataGroup", function(){
+
+
+})
+
 demoPackage.TestItemRenderer = $r.extend("Component", function(){
 
     this.skinClass = "demoPackage.TestItemRendererSkin";
@@ -163,8 +168,8 @@ demoPackage.TestItemRenderer = $r.extend("Component", function(){
 
 demoPackage.MainComponent = $r.extend("Component", function () {
 
-    this.classConstructor = function(){
-        this.super();
+    this.init = function(){
+        this.super.init();
     };
     this.skinClass = "demoPackage.MainComponentSkin";
 

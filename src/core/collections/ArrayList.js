@@ -1,8 +1,8 @@
 $r.ArrayList = extend("EventDispatcher", function () {
 
-    this.classConstructor = function (source) {
+    this.init = function (source) {
 
-        this.super();
+        this.super.init();
 
         disableEvents();
         this.source = source;
@@ -26,8 +26,8 @@ $r.ArrayList = extend("EventDispatcher", function () {
         len = _source.length;
         if (_dispatchEvents == 0) {
             var event = new $r.CollectionEvent();
-            event.kind = $r.CollectionEventKind.RESET;
-            this.dispatchEvent(event);
+            event.eventObject.kind = $r.CollectionEventKind.RESET;
+            this.dispatchEvent(event.eventObject);
         }
     });
 
@@ -47,7 +47,7 @@ $r.ArrayList = extend("EventDispatcher", function () {
 
     this.addItemAt = function (item, index) {
 
-        if (index < 0 || index >= this.length) {
+        if (index < 0 || index > this.length) {
             var message = "Index out of bounds Exception: Specified index " + index + "is out of bounds for" +
                     "this collection of length " + this.length;
             throw new RangeError(message);
@@ -143,14 +143,14 @@ $r.ArrayList = extend("EventDispatcher", function () {
             var hasCollectionListener = this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE);
             if (hasCollectionListener) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.kind = $r.CollectionEventKind.REPLACE;
-                event.location = index;
+                event.eventObject.kind = $r.CollectionEventKind.REPLACE;
+                event.eventObject.location = index;
                 var updateInfo = {};
                 updateInfo.oldValue = oldItem;
                 updateInfo.newValue = item;
                 updateInfo.property = index;
-                event.items.push(updateInfo);
-                this.dispatchEvent(event);
+                event.eventObject.items.push(updateInfo);
+                this.dispatchEvent(event.eventObject);
             }
         }
         return oldItem;
@@ -179,12 +179,12 @@ $r.ArrayList = extend("EventDispatcher", function () {
 
     function internalDispatchEvent(_this,kind, item, location) {
         if (_dispatchEvents == 0) {
-            if (hasEventListener($r.CollectionEvent.COLLECTION_CHANGE)) {
+            if (_this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE)) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.kind = kind;
-                event.items.push(item);
-                event.location = location;
-                _this.dispatchEvent(event);
+                event.eventObject.kind = kind;
+                event.eventObject.items.push(item);
+                event.eventObject.location = location;
+                _this.dispatchEvent(event.eventObject);
             }
 
         }

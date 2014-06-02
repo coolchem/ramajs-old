@@ -14,8 +14,8 @@ $r.State = extend("EventDispatcher", function () {
         return _stateGroups;
     });
 
-    this.classConstructor = function(name,stateGroups){
-        this.super();
+    this.init = function(name,stateGroups){
+        this.super.init();
         _name = name;
         _stateGroups = stateGroups;
     }

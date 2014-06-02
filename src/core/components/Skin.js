@@ -29,8 +29,8 @@ $r.Skin = extend("Group",function () {
         }
     })
 
-    this.classConstructor = function(skinClass){
-        this.super();
+    this.init = function(skinClass){
+        this.super.init();
         compileSkin($r.skinFactory(skinClass),this);
     }
 

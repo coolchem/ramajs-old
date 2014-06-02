@@ -2,7 +2,7 @@ $r.EventDispatcher = extend("Class",function () {
 
     var eventListenersDictionary = {};
 
-    this.classConstructor = function () {
+    this.init = function () {
 
         this[0] = document.createElement("event-dispatcher");
     };

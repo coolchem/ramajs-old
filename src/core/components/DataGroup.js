@@ -1,7 +1,21 @@
 $r.DataGroup = extend("Group", function () {
 
-    var indexToRenderer= [];
-    var dataProviderChanged;
+
+    var indexToRenderer = [];
+
+    var setDataProvider,itemRemoved,itemAdded;
+
+    this.init = function(){
+        this.super.init();
+
+        setDataProvider = $r.bindFunction(setDataProviderFn, this);
+
+        itemRemoved = $r.bindFunction(itemRemovedFn, this);
+
+        itemAdded = $r.bindFunction(itemAddedFn, this);
+
+    }
+
 
     this.set("htmlContent", function (newValue) {
 
@@ -19,9 +33,9 @@ $r.DataGroup = extend("Group", function () {
         if (_dataProvider == value)
             return;
         _dataProvider = value;
-        dataProviderChanged = true;
-        setDataProvider(this)
-        this.dispatchEvent((new $r.Event("dataProviderChanged")).eventObject);
+        setDataProvider()
+        var event = new $r.Event("dataProviderChanged");
+        this.dispatchEvent(event.eventObject);
 
 
     });
@@ -30,12 +44,10 @@ $r.DataGroup = extend("Group", function () {
 
     this.set("itemRenderer", function (value) {
 
-        if(typeof value === "string")
-        {
-           _itemRenderer = $r.classFactory(value)
+        if (typeof value === "string") {
+            _itemRenderer = $r.classFactory(value)
         }
-        else
-        {
+        else {
             _itemRenderer = value;
         }
 
@@ -63,49 +75,22 @@ $r.DataGroup = extend("Group", function () {
     this.initialize = function () {
 
         this.super.initialize();
-        setDataProvider(this);
+        setDataProvider();
 
     };
 
-
-    function setDataProvider(_this) {
-        if (_this.initialized) {
-            removeAllItemRenderers(_this);
-            createItemRenderers(_this);
+    function setDataProviderFn() {
+        if (this.initialized) {
+            removeAllItemRenderers();
+            createItemRenderers();
             addDataProviderListener();
         }
     }
 
 
-    function removeAllItemRenderers(_this) {
+    function removeAllItemRenderers() {
 
         indexToRenderer = [];
-    }
-
-    function createItemRenderers(_this) {
-        if (!_dataProvider) {
-            removeAllItemRenderers(_this);
-            return;
-        }
-        if(_itemRenderer)
-        {
-            for (var index = 0; index < _dataProvider.length; index++) {
-
-                  var renderer = new _itemRenderer();
-                  if(typeof _dataProvider === "array")
-                  {
-                      renderer.data = _dataProvider[index]
-                  }
-                  else if(_dataProvider.source)
-                  {
-                      renderer.data  = _dataProvider.source[index];
-                  }
-
-                 _this.addElement(renderer);
-            }
-        }
-
-
     }
 
     function addDataProviderListener() {
@@ -124,8 +109,6 @@ $r.DataGroup = extend("Group", function () {
             case $r.CollectionEventKind.ADD:
             {
                 // items are added
-                // figure out what items were added and where
-                // for virtualization also figure out if items are now in view
                 adjustAfterAdd(event.items, event.location);
                 break;
             }
@@ -139,9 +122,7 @@ $r.DataGroup = extend("Group", function () {
 
             case $r.CollectionEventKind.REMOVE:
             {
-                // items are added
-                // figure out what items were removed
-                // for virtualization also figure out what items are now in view
+                // items are removed
                 adjustAfterRemove(event.items, event.location);
                 break;
             }
@@ -157,8 +138,6 @@ $r.DataGroup = extend("Group", function () {
             {
                 // from a filter or sort...let's just reset everything
                 removeDataProviderListener();
-                dataProviderChanged = true;
-                invalidateProperties();
                 break;
             }
 
@@ -166,33 +145,156 @@ $r.DataGroup = extend("Group", function () {
             {
                 // reset everything
                 removeDataProviderListener();
-                dataProviderChanged = true;
-                invalidateProperties();
+                setDataProvider()
                 break;
             }
 
             case $r.CollectionEventKind.UPDATE:
             {
-                // if a renderer is currently being updated, let's
-                // just ignore any UPDATE events.
-                if (renderersBeingUpdated)
-                    break;
 
-                //update the renderer's data and data-dependant
-                //properties.
-                for (var i = 0;
-                     i < event.items.length;
-                     i++) {
-                    var pe = event.items[i];
-                    if (pe) {
-                        var index = dataProvider.getItemIndex(pe.source);
-                        var renderer = indexToRenderer[index];
-                        setUpItemRenderer(renderer, index, pe.source);
-                    }
-                }
                 break;
             }
         }
+    }
+
+
+    function removeRendererAt(index) {
+        const renderer = indexToRenderer[index];
+        if (renderer) {
+            var item;
+
+            if (renderer.data && _itemRenderer != null)
+                item = renderer.data;
+            else
+                item = renderer;
+            itemRemoved(item, index);
+        }
+    }
+
+
+    function itemRemovedFn(item, index) {
+        // Remove the old renderer at index from indexToRenderer[], from the
+        // DataGroup, and clear its data property (if any).
+
+        var oldRenderer = indexToRenderer[index];
+
+        if (indexToRenderer.length > index)
+            indexToRenderer.splice(index, 1);
+
+        /*        dispatchEvent(new RendererExistenceEvent(
+         RendererExistenceEvent.RENDERER_REMOVE, false, false, oldRenderer, index, item));*/
+
+        if (oldRenderer.data && oldRenderer !== item)
+            oldRenderer.data = null;
+
+        var child = oldRenderer;
+        if (child)
+            this.removeElement(child);
+    }
+
+    function createRendererForItem(item) {
+        if (_itemRenderer != null) {
+            var renderer = new _itemRenderer();
+            renderer.data = item;
+            return renderer
+        }
+        return null;
+    }
+
+    function createItemRenderers() {
+        if (!_dataProvider) {
+            removeAllItemRenderers();
+            return;
+        }
+
+        var dataProviderLength = _dataProvider.length;
+
+        // Remove the renderers we're not going to need
+        for (var index = indexToRenderer.length - 1; index >= dataProviderLength; index--)
+            removeRendererAt(index);
+
+        // Reset the existing renderers
+        for (index = 0; index < indexToRenderer.length; index++) {
+            var item = _dataProvider.getItemAt(index);
+            var renderer = indexToRenderer[index]
+
+            removeRendererAt(index);
+            itemAdded(item, index);
+        }
+
+        // Create new renderers
+        for (index = indexToRenderer.length; index < dataProviderLength; index++)
+            itemAdded(_dataProvider.getItemAt(index), index);
+    }
+
+
+    function itemAddedFn(item, index) {
+        var myItemRenderer = createRendererForItem(item);
+        indexToRenderer.splice(index, 0, myItemRenderer);
+        this.addElementAt(myItemRenderer, index);
+    }
+
+    function adjustAfterAdd(items, location) {
+        var length = items.length;
+        for (var i = 0; i < length; i++) {
+            itemAdded(items[i], location + i);
+        }
+
+        // the order might have changed, so we might need to redraw the other
+        // renderers that are order-dependent (for instance alternatingItemColor)
+        resetRenderersIndices();
+    }
+
+
+    function adjustAfterRemove(items, location) {
+        var length= items.length;
+        for (var i = length - 1; i >= 0; i--) {
+            itemRemoved(items[i], location + i);
+        }
+
+// the order might have changed, so we might need to redraw the other
+// renderers that are order-dependent (for instance alternatingItemColor)
+        resetRenderersIndices();
+    }
+
+    /**
+     *  @private
+     */
+    function adjustAfterMove(item, location, oldLocation) {
+        itemRemoved(item, oldLocation);
+        itemAdded(item, location);
+        resetRenderersIndices();
+    }
+
+    /**
+     *  @private
+     */
+    function adjustAfterReplace(items, location) {
+        var length= items.length;
+        for (var i= length - 1;i >= 0; i-- )
+        {
+            itemRemoved(items[i].oldValue, location + i);
+        }
+
+        for (i = length - 1; i >= 0; i--) {
+            itemAdded(items[i].newValue, location);
+        }
+    }
+
+
+    function resetRenderersIndices() {
+        if (indexToRenderer.length == 0)
+            return;
+        var indexToRendererLength = indexToRenderer.length;
+        for (var index = 0; index < indexToRendererLength; index++)
+            resetRendererItemIndex(index);
+    }
+
+    function resetRendererItemIndex(index)
+    {
+        var renderer = indexToRenderer[index]
+        if (renderer)
+            renderer.itemIndex = index;
     }
 
 

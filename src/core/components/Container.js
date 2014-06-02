@@ -1,4 +1,3 @@
-
 $r.Container = extend("Component", function () {
 
     var _htmlContent = [];

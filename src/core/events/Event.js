@@ -8,7 +8,7 @@ $r.Event = extend("Class",function () {
         this.eventObject = document.createEventObject();
     }
 
-    this.classConstructor = function (name, bubbles, cancellable) {
+    this.init = function (name, bubbles, cancellable) {
 
         if (document.createEvent) {
             this.eventObject.initEvent(name, bubbles, cancellable);

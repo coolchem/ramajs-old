@@ -48,8 +48,8 @@ $r.Application('TestApplication', function()
         }
     ])
 
-    this.classConstructor = function(){
-        this.super();
+    this.init = function(){
+        this.super.init();
     }
     this.skinClass = "$r.AppSkin";
 
@@ -77,22 +77,7 @@ $r.Application('TestApplication', function()
 
     function handleTestButtonClick(clickEvent) {
 
-        if(this.testViewStack.selectedIndex + 1 === this.testViewStack.elements.length)
-        {
-            this.testViewStack.selectedIndex = 0;
-        }
-        else
-        {
-            this.testViewStack.selectedIndex = this.testViewStack.selectedIndex + 1;
-        }
-        if(this.currentState === "open")
-        {
-            this.currentState = "close";
-        }
-        else
-        {
-            this.currentState = "open";
-        }
+        dataProvider.removeItemAt(0);
     };
 
 
