@@ -6,7 +6,7 @@ demoPackage.skins(
         {skinClass:'TestItemRendererSkin', skinURL:"views/main/skins/testItemRendererSkin.html"}
 );
 
-demoPackage.TestModel = $r.extend("Class",function () {
+demoPackage.Class("TestModel")(function(){
 
     var _testProp = "super"
     this.get("testProp", function(){
@@ -19,7 +19,7 @@ demoPackage.TestModel = $r.extend("Class",function () {
 
 });
 
-demoPackage.MyEvent = $r.extend("Event", function () {
+demoPackage.Class("MyEvent").extends("Event")(function(){
 
     this.init = function () {
         this.super.init("myEvent", true, false);
@@ -27,7 +27,7 @@ demoPackage.MyEvent = $r.extend("Event", function () {
 
 });
 
-demoPackage.TestModel1 = $r.extend("demoPackage.TestModel", function () {
+demoPackage.Class("TestModel1").extends("demoPackage.TestModel")(function () {
 
     var _baseTestProp = "Base"
     this.get("testProp", function(){
@@ -41,7 +41,7 @@ demoPackage.TestModel1 = $r.extend("demoPackage.TestModel", function () {
 
 });
 
-demoPackage.MainContainer = $r.extend("Container", function () {
+demoPackage.Class("MainContainer").extends("Container")(function () {
 
     //this.skinClass = "demoPackage.MainContainerSkin";
 
@@ -114,12 +114,26 @@ demoPackage.MainContainer = $r.extend("Container", function () {
     }
 })
 
-demoPackage.MyTestGroup = $r.extend("DataGroup", function(){
+demoPackage.Class("MyTestGroup2")(function(){
+
+
+});
+
+demoPackage.Class("MyTestGroup1").extends("DataGroup")(function(){
 
 
 })
 
-demoPackage.TestItemRenderer = $r.extend("Component", function(){
+demoPackage.Class("MyTestGroup").extends("DataGroup")(function(){
+
+      var testGroupHuumm1 = new demoPackage.MyTestGroup1();
+
+      var testGroupHuumm2 = new demoPackage.MyTestGroup2();
+
+    console.log(testGroupHuumm1,testGroupHuumm2);
+})
+
+demoPackage.Class("TestItemRenderer").extends("Component")(function(){
 
     this.skinClass = "demoPackage.TestItemRendererSkin";
 
@@ -166,7 +180,7 @@ demoPackage.TestItemRenderer = $r.extend("Component", function(){
 
 })
 
-demoPackage.MainComponent = $r.extend("Component", function () {
+demoPackage.Class("MainComponent").extends("Component")(function () {
 
     this.init = function(){
         this.super.init();

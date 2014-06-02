@@ -1,4 +1,4 @@
-$r.Dictionary = extend("Class", function(){
+$r.Class("Dictionary").extends("Class")(function(){
 
     var dictionaryArray = [];
 

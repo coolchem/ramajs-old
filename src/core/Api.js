@@ -1,7 +1,5 @@
 
-$r.extend = extend;
 $r.package = rPackage;
-
 //All Core Components which are exposed
 
 //All the functions and properties which are exposed

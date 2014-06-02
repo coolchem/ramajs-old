@@ -1,5 +1,5 @@
 
-$r.ComponentBase = extend("EventDispatcher", function () {
+$r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
 
     this.compid = "";

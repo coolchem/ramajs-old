@@ -1,4 +1,4 @@
-$r.Group = extend("ComponentBase", function () {
+$r.Class("Group").extends("ComponentBase")(function () {
 
 
     var _htmlContent = [];

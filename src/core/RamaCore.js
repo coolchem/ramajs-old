@@ -8,14 +8,14 @@ var skins = {};
 
 $r = window.$r = constructPackage(PACKAGE_RAMA);
 
-var Class = function () {
+var RClass = function () {
 };
 
-Class.prototype.isA = function(constructorFunction){
+RClass.prototype.isA = function(constructorFunction){
 
 }
 
-Class.prototype.get = function (propertyName, getter) {
+RClass.prototype.get = function (propertyName, getter) {
 
     Object.defineProperty(this, propertyName,
             {   get:getter,
@@ -24,7 +24,7 @@ Class.prototype.get = function (propertyName, getter) {
             });
 }
 
-Class.prototype.set = function (propertyName, setter) {
+RClass.prototype.set = function (propertyName, setter) {
 
     Object.defineProperty(this, propertyName,
             {   set:setter,
@@ -32,8 +32,6 @@ Class.prototype.set = function (propertyName, setter) {
                 configurable:true
             });
 }
-
-$r.Class = Class;
 
 function rPackage(packageName) {
 
@@ -45,9 +43,85 @@ function rPackage(packageName) {
     }
 };
 
+//core functions
+function constructPackage(packageName) {
+
+    var rPackage = {};
+    rPackage.packageName = packageName;
+
+    rPackage.skins = function () {
+
+        for (var i in arguments) {
+            var skinItem = arguments[i];
+            skins[getQualifiedName(this, skinItem.skinClass)] = skinItem;
+        }
+    };
+
+    rPackage.Class = function(className){
+
+        var returnFunction = function(constructorFunction){
+
+            setupClass(rPackage,className,constructorFunction)
+        }
+
+        returnFunction.extends = function(qualifiedClassName){
+
+            return function(constructorFunction){
+
+                setupClass(rPackage,className,constructorFunction,qualifiedClassName)
+            }
+        }
+
+        return returnFunction;
+    }
+
+    packages[packageName] = rPackage;
+
+    return rPackage;
+
+}
+
+function setupClass(rPackage,className,constructorFunction,superClassName)
+{
+    constructorFunction.prototype = new RClass();
+
+    if(superClassName && superClassName !== "")
+    {
+        rPackage[className] = function(){
+            var baseClass = classFactory(superClassName);
+            var subClass  = constructorFunction;
+
+            var constructorArguments = null;
+            var isBaseClassConstruction = false;
+
+            if ( arguments.length > 0 && arguments[0] !== undefined) {
+                if (arguments[0] === "isBaseClassConstruction") {
+                    isBaseClassConstruction = true;
+                }
+                else {
+                    constructorArguments = arguments;
+                }
+            }
+
+            var instance =  constructClass(subClass, baseClass)
+
+            if(!isBaseClassConstruction && instance.init)
+            {
+                instance.init.apply(instance, constructorArguments);
+            }
+
+            return instance
+        }
+    }
+    else
+    {
+        rPackage[className] = constructorFunction;
+    }
+}
+
 function extend(baseClassName, constructor){
 
-    constructor.prototype = new Class();
+    constructor.prototype = new RClass();
     return function(){
 
         var baseClass = classFactory(baseClassName);
@@ -231,25 +305,7 @@ function ApplicationManager(applicationClass, rootNode) {
 
 }
 
-//core functions
-function constructPackage(packageName) {
 
-    var rPackage = {};
-    rPackage.packageName = packageName;
-
-    rPackage.skins = function () {
-
-        for (var i in arguments) {
-            var skinItem = arguments[i];
-            skins[getQualifiedName(this, skinItem.skinClass)] = skinItem;
-        }
-    };
-
-    packages[packageName] = rPackage;
-
-    return rPackage;
-
-}
 
 function getQualifiedName(rPackage, className) {
     return rPackage.packageName + "." + className

@@ -1,4 +1,4 @@
-$r.ArrayList = extend("EventDispatcher", function () {
+$r.Class("ArrayList").extends("EventDispatcher")(function () {
 
     this.init = function (source) {
 

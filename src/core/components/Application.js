@@ -1,4 +1,4 @@
-$r.RApplication = extend("Component", function () {
+$r.Class("RApplication").extends("Component")(function () {
 
     this.applicationManager = null;
 

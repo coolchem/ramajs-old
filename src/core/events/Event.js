@@ -1,4 +1,4 @@
-$r.Event = extend("Class",function () {
+$r.Class("Event")(function () {
 
     this.eventObject = null; // The custom event that will be created
 

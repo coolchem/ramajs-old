@@ -1,4 +1,4 @@
-$r.Container = extend("Component", function () {
+$r.Class("Container").extends("Component")(function () {
 
     var _htmlContent = [];
     this.get("htmlContent", function () {

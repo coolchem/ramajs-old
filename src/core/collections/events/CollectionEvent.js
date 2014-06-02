@@ -1,4 +1,4 @@
-$r.CollectionEvent = extend("Event", function () {
+$r.Class("CollectionEvent").extends("Event")(function () {
 
 
 

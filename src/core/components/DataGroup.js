@@ -1,4 +1,4 @@
-$r.DataGroup = extend("Group", function () {
+$r.Class("DataGroup").extends("Group")(function () {
 
 
     var indexToRenderer = [];

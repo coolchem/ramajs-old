@@ -1,4 +1,4 @@
-$r.LayoutBase = extend("Class",function () {
+$r.Class("LayoutBase")(function () {
 
     this.target = null;
 

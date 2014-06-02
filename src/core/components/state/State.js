@@ -1,5 +1,5 @@
 
-$r.State = extend("EventDispatcher", function () {
+$r.Class("State").extends("EventDispatcher")(function () {
 
     var _stateManagedComponents = [];
     var _name;

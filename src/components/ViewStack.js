@@ -1,4 +1,4 @@
-$r.ViewStack = extend("Group", function () {
+$r.Class("ViewStack").extends("Group")(function () {
 
     var _selectedIndex = 0;
 

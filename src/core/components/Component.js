@@ -1,5 +1,5 @@
 
-$r.Component = extend("ComponentBase", function () {
+$r.Class("Component").extends("ComponentBase")(function () {
 
     var attachSkin,findSkinParts;
 

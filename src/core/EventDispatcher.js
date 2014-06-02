@@ -1,4 +1,4 @@
-$r.EventDispatcher = extend("Class",function () {
+$r.Class("EventDispatcher")(function () {
 
     var eventListenersDictionary = {};
 

@@ -1,4 +1,4 @@
-$r.Skin = extend("Group",function () {
+$r.Class("Skin").extends("Group")(function () {
 
     var STATES = "states";
 
