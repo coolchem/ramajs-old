@@ -1,22 +1,22 @@
-$r.Class("Event")(function () {
+$r.Class("Event")(function (name, bubbles, cancellable) {
 
-    this.eventObject = null; // The custom event that will be created
+    this.event = null; // The custom event that will be created
 
     if (document.createEvent) {
-        this.eventObject = document.createEvent("HTMLEvents");
+        this.event = document.createEvent("HTMLEvents");
     } else {
-        this.eventObject = document.createEventObject();
+        this.event = document.createEventObject();
     }
 
     this.init = function (name, bubbles, cancellable) {
 
         if (document.createEvent) {
-            this.eventObject.initEvent(name, bubbles, cancellable);
+            this.event.initEvent(name, bubbles, cancellable);
         } else {
-            this.eventObject.eventType = name;
+            this.event.eventType = name;
         }
 
-        this.eventObject.eventName = name;
+        this.event.eventName = name;
     };
 
 } )

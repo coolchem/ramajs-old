@@ -35,7 +35,7 @@ $r.Class("DataGroup").extends("Group")(function () {
         _dataProvider = value;
         setDataProvider()
         var event = new $r.Event("dataProviderChanged");
-        this.dispatchEvent(event.eventObject);
+        this.dispatchEvent(event.event);
 
 
     });
@@ -159,7 +159,7 @@ $r.Class("DataGroup").extends("Group")(function () {
 
 
     function removeRendererAt(index) {
-        const renderer = indexToRenderer[index];
+        var renderer = indexToRenderer[index];
         if (renderer) {
             var item;
 

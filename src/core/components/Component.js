@@ -1,13 +1,20 @@
 
 $r.Class("Component").extends("ComponentBase")(function () {
 
-    var attachSkin,findSkinParts;
+    var attachSkin,findSkinParts,detachSkin,clearSkinParts,
+            validateSkinChange,validateSkinState;
+
+    var _skinChanged = false;
 
     this.init = function(){
 
         this.super.init();
         attachSkin = $r.bindFunction(attachSkinFn, this);
+        detachSkin = $r.bindFunction(detachSkinFn, this);
         findSkinParts = $r.bindFunction(findSkinPartsFn, this);
+        clearSkinParts = $r.bindFunction(clearSkinPartsFn, this);
+        validateSkinChange = $r.bindFunction(validateSkinChangeFn, this);
+        validateSkinState =  $r.bindFunction(validateSkinStateFn, this);
 
     }
 
@@ -15,12 +22,24 @@ $r.Class("Component").extends("ComponentBase")(function () {
 
     var _skinClass;
 
+    var _skinClassSet = false;
+
     this.get("skinClass", function () {
         return _skinClass;
     })
 
     this.set("skinClass", function (newValue) {
-        _skinClass = newValue;
+
+        if(_skinClass !== newValue)
+        {
+            _skinClass = newValue;
+            if(_skinClassSet)
+                validateSkinChange();
+        }
+
+        if(!_skinClassSet)
+            _skinClassSet = true;
+
     })
 
     var _skinParts = [];
@@ -48,47 +67,83 @@ $r.Class("Component").extends("ComponentBase")(function () {
     })
 
     this.set("currentState",function(value){
-        _currentState = value;
-        _skinElement.currentState = value;
+
+        if(_currentState !== value)
+        {
+            _currentState = value;
+            validateSkinState();
+        }
+
     })
 
     this.$$createChildren = function () {
-        attachSkin(this);
+        validateSkinChange();
     };
-
-    this.$$childrenCreated = function () {
-        this.super.$$childrenCreated();
-        findSkinParts(this);
-    };
-
-
-    function attachSkinFn(_this) {
-
-        _skinElement = new $r.Skin(_this.skinClass);
-        _this.addElement(_skinElement);
-    }
-
 
     this.partAdded = function (partName, instance) {
         //Override this method to add functionality to various skin component
     };
 
-    function findSkinPartsFn(_this) {
+    this.partRemoved = function (partName, instance) {
+        //Override this method to add functionality to various skin component
+    };
+
+    function validateSkinStateFn(){
+
+        _skinElement.currentState = _currentState;
+    }
+
+    function validateSkinChangeFn(){
+
+        if (_skinElement)
+            detachSkin();
+        attachSkin();
+    }
+
+    function attachSkinFn() {
+
+        _skinElement = new $r.Skin(this.skinClass);
+        this.addElement(_skinElement);
+
+        findSkinParts();
+        validateSkinState();
+    }
+
+    function detachSkinFn(){
+        clearSkinParts();
+        this.removeElement(_skinElement);
+    }
+
+    function clearSkinPartsFn(){
+
         if (_skinElement) {
-            for (var j = 0; j < _this.skinParts.length; j++) {
-                var skinPart = _this.skinParts[j];
+            for (var j = 0; j < this.skinParts.length; j++) {
+                var skinPart = this.skinParts[j];
+                if(this[skinPart.id] !== null)
+                {
+                  this.partRemoved(skinPart.id, this[skinPart.id])
+                }
+            }
+        }
+
+    }
+
+    function findSkinPartsFn() {
+        if (_skinElement) {
+            for (var j = 0; j < this.skinParts.length; j++) {
+                var skinPart = this.skinParts[j];
                 var skinPartFound = false;
 
                 var skinPartElement = _skinElement.getSkinPart(skinPart.id);
 
                 if (skinPartElement) {
                     skinPartFound = true;
-                    _this[skinPart.id] = skinPartElement;
-                    _this.partAdded(skinPart.id, skinPartElement)
+                    this[skinPart.id] = skinPartElement;
+                    this.partAdded(skinPart.id, skinPartElement)
                 }
 
                 if (skinPart.required === true && !skinPartFound) {
-                    throw new ReferenceError("Required Skin part not found: " + skinPart.id + " in " + _this.skin);
+                    throw new ReferenceError("Required Skin part not found: " + skinPart.id + " in " + this.skin);
                 }
             }
         }

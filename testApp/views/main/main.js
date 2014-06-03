@@ -98,7 +98,7 @@ demoPackage.Class("MainContainer").extends("Container")(function () {
 
         //var customEvent = demoLibrary.new("MyEvent");
 
-        //testingEventDispatcher.dispatchEvent(customEvent.eventObject);
+        //testingEventDispatcher.dispatchEvent(customEvent.event);
     }
 
     var handleMyEvent = function (event) {

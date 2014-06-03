@@ -85,48 +85,10 @@ function setupClass(rPackage,className,constructorFunction,superClassName)
 {
     constructorFunction.prototype = new RClass();
 
-    if(superClassName && superClassName !== "")
-    {
-        rPackage[className] = function(){
-            var baseClass = classFactory(superClassName);
-            var subClass  = constructorFunction;
+    rPackage[className] = function(){
 
-            var constructorArguments = null;
-            var isBaseClassConstruction = false;
-
-            if ( arguments.length > 0 && arguments[0] !== undefined) {
-                if (arguments[0] === "isBaseClassConstruction") {
-                    isBaseClassConstruction = true;
-                }
-                else {
-                    constructorArguments = arguments;
-                }
-            }
-
-            var instance =  constructClass(subClass, baseClass)
-
-            if(!isBaseClassConstruction && instance.init)
-            {
-                instance.init.apply(instance, constructorArguments);
-            }
-
-            return instance
-        }
-    }
-    else
-    {
-        rPackage[className] = constructorFunction;
-    }
-}
-
-function extend(baseClassName, constructor){
-
-    constructor.prototype = new RClass();
-    return function(){
-
-        var baseClass = classFactory(baseClassName);
-        var subClass  = constructor;
-
+        var instance;
+        var subClass  = constructorFunction;
         var constructorArguments = null;
         var isBaseClassConstruction = false;
 
@@ -139,15 +101,34 @@ function extend(baseClassName, constructor){
             }
         }
 
-        var instance =  constructClass(subClass, baseClass)
+        if(superClassName && superClassName !== "")
+        {
+            var baseClass = classFactory(superClassName);
+
+            instance =  constructClass(subClass, baseClass)
+        }
+        else
+        {
+            instance =  new subClass();
+        }
 
         if(!isBaseClassConstruction && instance.init)
         {
             instance.init.apply(instance, constructorArguments);
         }
 
-        return instance
+        instance.className = getQualifiedName(rPackage,className)
 
+        function construct(constructor, args) {
+            function F() {
+                return constructor.apply(this, args);
+            }
+
+            F.prototype = constructor.prototype;
+            return F;
+        }
+
+        return instance
     }
 }
 
@@ -158,13 +139,22 @@ function classFactory(qualifiedClassName) {
 
     if(packageAndLibrary.length > 1)
     {
-        classConstructor = packages[packageAndLibrary[0]][packageAndLibrary[1]];
+        if(packages[packageAndLibrary[0]] === null || packages[packageAndLibrary[0]] === undefined)
+        {
+            throw new ReferenceError("Package Not Found Exception: The Package " + packageAndLibrary[0] + " could not be found\n" +
+                    "Please Make sure it is registered.");
+        }
+        else
+        {
+            classConstructor = packages[packageAndLibrary[0]][packageAndLibrary[1]];
+        }
+
     }
 
     if(typeof classConstructor !== "function" || classConstructor === null || classConstructor === undefined)
     {
-        throw new ReferenceError("Class Note Found Exception: The Class " + qualifiedClassName + " could not be found\n" +
-                "Please Make sure it is registered in the package ");
+        throw new ReferenceError("Class Not Found Exception: The Class " + qualifiedClassName + " could not be found\n" +
+                "Please Make sure it is registered in the package " + packageAndLibrary[0]);
     }
 
     return classConstructor;
@@ -259,7 +249,7 @@ function constructClass(subClass, baseClass, constructorArguments) {
 
 function Application(applicationname, constructor) {
 
-    $r[applicationname] = extend("RApplication",constructor);
+    $r.Class(applicationname).extends("RApplication")(constructor);
 };
 
 

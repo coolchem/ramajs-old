@@ -10,10 +10,10 @@ $r.Class("CollectionEvent").extends("Event")(function () {
 
         this.super.init(type, bubbles, cancelable);
 
-        this.eventObject.kind = kind;
-        this.eventObject.location = location;
-        this.eventObject.oldLocation = oldLocation;
-        this.eventObject.items = items ? items : [];
+        this.event.kind = kind;
+        this.event.location = location;
+        this.event.oldLocation = oldLocation;
+        this.event.items = items ? items : [];
 
     };
 

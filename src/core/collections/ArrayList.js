@@ -26,8 +26,8 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
         len = _source.length;
         if (_dispatchEvents == 0) {
             var event = new $r.CollectionEvent();
-            event.eventObject.kind = $r.CollectionEventKind.RESET;
-            this.dispatchEvent(event.eventObject);
+            event.event.kind = $r.CollectionEventKind.RESET;
+            this.dispatchEvent(event.event);
         }
     });
 
@@ -143,14 +143,14 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
             var hasCollectionListener = this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE);
             if (hasCollectionListener) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.eventObject.kind = $r.CollectionEventKind.REPLACE;
-                event.eventObject.location = index;
+                event.event.kind = $r.CollectionEventKind.REPLACE;
+                event.event.location = index;
                 var updateInfo = {};
                 updateInfo.oldValue = oldItem;
                 updateInfo.newValue = item;
                 updateInfo.property = index;
-                event.eventObject.items.push(updateInfo);
-                this.dispatchEvent(event.eventObject);
+                event.event.items.push(updateInfo);
+                this.dispatchEvent(event.event);
             }
         }
         return oldItem;
@@ -181,10 +181,10 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
         if (_dispatchEvents == 0) {
             if (_this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE)) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.eventObject.kind = kind;
-                event.eventObject.items.push(item);
-                event.eventObject.location = location;
-                _this.dispatchEvent(event.eventObject);
+                event.event.kind = kind;
+                event.event.items.push(item);
+                event.event.location = location;
+                _this.dispatchEvent(event.event);
             }
 
         }

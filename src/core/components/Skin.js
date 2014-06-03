@@ -10,6 +10,8 @@ $r.Class("Skin").extends("Group")(function () {
 
     var _currentState = "";
 
+    this.ownerComponent = null;
+
     this.get("currentState",function(){
         return _currentState
 
@@ -22,7 +24,7 @@ $r.Class("Skin").extends("Group")(function () {
             _currentState = value;
             skinStates[_currentState].apply();
         }
-        else
+        else if(value !== "")
         {
             throw new ReferenceError("State not Found Exception: The state '" + value +
                     "' being set on the component is not found in the skin");
