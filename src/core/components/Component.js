@@ -102,11 +102,14 @@ $r.Class("Component").extends("ComponentBase")(function () {
 
     function attachSkinFn() {
 
-        _skinElement = new $r.Skin(this.skinClass);
-        this.addElement(_skinElement);
+        if(this.skinClass)
+        {
+            _skinElement = new $r.Skin(this.skinClass);
+            this.addElement(_skinElement);
 
-        findSkinParts();
-        validateSkinState();
+            findSkinParts();
+            validateSkinState();
+        }
     }
 
     function detachSkinFn(){
