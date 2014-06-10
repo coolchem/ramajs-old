@@ -1,9 +1,9 @@
-$r.Class("DataGroup").extends("Group")(function () {
+$r.Class("DataGroup").extends("GroupBase")(function () {
 
 
     var indexToRenderer = [];
 
-    var setDataProvider,itemRemoved,itemAdded;
+    var setDataProvider,itemRemoved,itemAdded,dataProvider_collectionChangeHandler;
 
     this.init = function(){
         this.super.init();
@@ -13,13 +13,11 @@ $r.Class("DataGroup").extends("Group")(function () {
         itemRemoved = $r.bindFunction(itemRemovedFn, this);
 
         itemAdded = $r.bindFunction(itemAddedFn, this);
+        dataProvider_collectionChangeHandler = $r.bindFunction(dataProvider_collectionChangeHandlerFn, this)
+
+        this.setAttribute("comp", "DataGroup");
 
     }
-
-
-    this.set("htmlContent", function (newValue) {
-
-    });
 
     var _dataProvider = null;
 
@@ -84,6 +82,8 @@ $r.Class("DataGroup").extends("Group")(function () {
             removeAllItemRenderers();
             createItemRenderers();
             addDataProviderListener();
+
+            this.$$updateDisplay();
         }
     }
 
@@ -104,7 +104,7 @@ $r.Class("DataGroup").extends("Group")(function () {
     }
 
 
-    function dataProvider_collectionChangeHandler(event) {
+    function dataProvider_collectionChangeHandlerFn(event) {
         switch (event.kind) {
             case $r.CollectionEventKind.ADD:
             {
@@ -155,6 +155,8 @@ $r.Class("DataGroup").extends("Group")(function () {
                 break;
             }
         }
+
+        this.$$updateDisplay();
     }
 
 
@@ -225,6 +227,7 @@ $r.Class("DataGroup").extends("Group")(function () {
         // Create new renderers
         for (index = indexToRenderer.length; index < dataProviderLength; index++)
             itemAdded(_dataProvider.getItemAt(index), index);
+
     }
 
 

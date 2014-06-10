@@ -1,4 +1,4 @@
-$r.Class("Group").extends("ComponentBase")(function () {
+$r.Class("Group").extends("GroupBase")(function () {
 
 
     var _htmlContent = [];
@@ -13,6 +13,12 @@ $r.Class("Group").extends("ComponentBase")(function () {
         _htmlContent = newValue;
         setHTMLContent(this);
     });
+
+    this.init = function(){
+        this.super.init();
+        this.setAttribute("comp", "Group");
+
+    }
 
     this.$$createChildren = function () {
 

@@ -255,6 +255,8 @@ function Application(applicationname, constructor) {
 
 function initApplications() {
 
+
+
     var appNodes = $r.find('[' + R_APP + ']');
 
     for (var i = 0; i < appNodes.length; i++) {
@@ -276,21 +278,29 @@ function initApplication(application, appNode) {
 
 }
 
-function ApplicationManager(applicationClass, rootNode) {
+function ApplicationManager(applicationClass, appNode) {
 
     var appClass = applicationClass;
 
     this.application = null;
-    this.applicationNode = rootNode;
+    this.applicationNode = appNode;
+
+    //Creating a stage to be the parent for all display objects.
+    // stage will be marked as having a position absolute.
+    this.stage = new $r.Stage();
+    this.stage.setStyle("position", "absolute");
+    this.stage.setStyle("width", "100%");
+    this.stage.setStyle("height", "100%");
 
 
     this.initialize = function () {
 
+        var parentNode = appNode.parentNode;
+        parentNode.replaceChild(this.stage[0], appNode);
         this.application = new appClass();
         this.application.applicationManager = this;
-        var parentNode = rootNode.parentNode;
-        parentNode.replaceChild(this.application[0], rootNode);
-        this.application.initialize();
+        this.application.setAttribute("comp",appNode.getAttribute(R_APP));
+        this.stage.addElement(this.application)
     }
 
 }

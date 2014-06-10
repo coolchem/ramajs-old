@@ -1,12 +1,18 @@
-
 $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
 
     this.compid = "";
     this.comp = "";
     this.initialized = false;
+    this.stage = null;
 
     var _elements = new $r.ArrayList();
+
+    this.init = function () {
+
+        this[0] = document.createElement("div");
+
+    };
 
     this.get("textContent",function(){
         return this[0].textContent;
@@ -52,10 +58,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         this.setStyle("display", _display);
     })
 
-    this.init = function () {
 
-        this[0] = document.createElement("div");
-    };
 
     this.find = function(selector){
         return $r.find(selector, this[0]);
@@ -67,38 +70,40 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
             return;
         this.$$createChildren();
         this.$$childrenCreated();
-
         this.initialized = true;
     };
 
     this.addElement = function (element) {
-        element.parentComponent = this;
-        element.initialize();
-        this.elements.addItem(element);
-        this[0].appendChild(element[0])
+        this.addElementAt(element, _elements.length)
+
     };
 
     this.addElementAt = function (element, index) {
 
-        if(_elements.length <= 0 || index > this.elements.length-1)
-        {
-            this.addElement(element)
-            return;
-        }
         if(index === -1)
         {
-          index = 0
+            index = 0
         }
-        var refChild = _elements.source[index][0];
+
         element.parentComponent = this;
+        element.stage = this.stage;
         element.initialize();
-        this.elements.addItemAt(index);
-        this[0].insertBefore(element, refChild)
+        if(_elements.length <= 0 || index > this.elements.length-1)
+        {
+            this[0].appendChild(element[0])
+        }
+        else
+        {
+            var refChild = _elements.source[index][0];
+            this[0].insertBefore(element, refChild)
+        }
+
+        this.elements.addItemAt(element,index);
 
     };
 
     this.removeElement = function (element) {
-
+        this.elements.removeItem(element);
         this[0].removeChild(element[0]);
     };
 
@@ -162,7 +167,5 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
 
     }
-
-
 
 })

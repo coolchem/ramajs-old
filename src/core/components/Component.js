@@ -15,6 +15,7 @@ $r.Class("Component").extends("ComponentBase")(function () {
         clearSkinParts = $r.bindFunction(clearSkinPartsFn, this);
         validateSkinChange = $r.bindFunction(validateSkinChangeFn, this);
         validateSkinState =  $r.bindFunction(validateSkinStateFn, this);
+        this.setAttribute("comp", "Component");
 
     }
 

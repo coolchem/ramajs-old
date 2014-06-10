@@ -15,6 +15,7 @@ $r.arrayUtil = ArrayUtil();
 $r.setupDefaultsForArguments =setupDefaultsForArguments;
 
 $r.STATES = STATES;
+$r.LAYOUT = LAYOUT;
 $r.COMP_ID = COMP_ID;
 $r.R_COMP = R_COMP;
 

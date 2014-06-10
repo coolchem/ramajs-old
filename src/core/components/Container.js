@@ -16,6 +16,12 @@ $r.Class("Container").extends("Component")(function () {
 
     this.contentGroup = null;
 
+    this.init = function(){
+        this.super.init();
+        this.setAttribute("comp", "Container");
+
+    }
+
     this.partAdded = function (partName, instance) {
 
         this.super.partAdded(partName, instance);

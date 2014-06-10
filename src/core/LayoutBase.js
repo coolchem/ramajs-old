@@ -4,6 +4,6 @@ $r.Class("LayoutBase")(function () {
 
     this.updateLayout = function () {
 
-        console.log(this.target);
+
     };
 });
