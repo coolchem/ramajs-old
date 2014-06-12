@@ -18,7 +18,6 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         return this[0].textContent;
 
     })
-
     this.set("textContent",function(value){
         this[0].textContent = value;
     })
@@ -27,36 +26,108 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         return _elements
 
     })
-
     this.set("elements",function(value){
         _elements = value;
     })
 
     this.parentComponent = null;
 
-    var _visibility = "";
-
     this.get("visibility",function(){
-        return _visibility
+        return this.getStyle("visibility");
 
     })
-
     this.set("visibility",function(value){
-        _visibility= value;
-        this.setStyle("visibility", _visibility);
+        this.setStyle("visibility", value);
     })
-
-    var _display = "";
 
     this.get("display",function(){
-        return _display
+        return this.getStyle("display")
 
     })
-
     this.set("display",function(value){
-        _display = value;
-        this.setStyle("display", _display);
+        this.setStyle("display", value);
     })
+
+    this.get("width",function(){
+        return this.getStyle("width")
+
+    })
+    this.set("width",function(value){
+        this.setStyle("width", value);
+    })
+
+    this.get("height",function(){
+        return this.getStyle("height")
+
+    })
+    this.set("height",function(value){
+        this.setStyle("height", value);
+    })
+
+    this.get("top",function(){
+        return this.getStyle("top")
+
+    })
+    this.set("top",function(value){
+        this.setStyle("top", value);
+    })
+
+    this.get("bottom",function(){
+        return this.getStyle("bottom")
+
+    })
+    this.set("bottom",function(value){
+        this.setStyle("bottom", value);
+    })
+
+    this.get("left",function(){
+        return this.getStyle("left")
+
+    })
+    this.set("left",function(value){
+        this.setStyle("left", value);
+    })
+
+    this.get("right",function(){
+        return this.getStyle("right")
+
+    })
+    this.set("right",function(value){
+        this.setStyle("right", value);
+    })
+
+    this.get("paddingLeft",function(){
+        return this.getStyle("paddingLeft")
+
+    })
+    this.set("paddingLeft",function(value){
+        this.setStyle("paddingLeft", value);
+    })
+
+    this.get("paddingRight",function(){
+        return this.getStyle("paddingRight")
+
+    })
+    this.set("paddingRight",function(value){
+        this.setStyle("paddingRight", value);
+    })
+
+    this.get("paddingTop",function(){
+        return this.getStyle("paddingTop")
+
+    })
+    this.set("paddingTop",function(value){
+        this.setStyle("paddingTop", value);
+    })
+
+    this.get("paddingBottom",function(){
+        return this.getStyle("paddingBottom")
+
+    })
+    this.set("paddingBottom",function(value){
+        this.setStyle("paddingBottom", value);
+    })
+
 
 
 
@@ -68,6 +139,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
         if (this.initialized)
             return;
+        this.setStyle("position", "absolute");
         this.$$createChildren();
         this.$$childrenCreated();
         this.initialized = true;
@@ -82,12 +154,9 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
         if(index === -1)
         {
-            index = 0
+            index = 0;
         }
 
-        element.parentComponent = this;
-        element.stage = this.stage;
-        element.initialize();
         if(_elements.length <= 0 || index > this.elements.length-1)
         {
             this[0].appendChild(element[0])
@@ -95,9 +164,12 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         else
         {
             var refChild = _elements.source[index][0];
-            this[0].insertBefore(element, refChild)
+            this[0].insertBefore(element[0], refChild)
         }
 
+        element.parentComponent = this;
+        element.stage = this.stage;
+        element.initialize();
         this.elements.addItemAt(element,index);
 
     };

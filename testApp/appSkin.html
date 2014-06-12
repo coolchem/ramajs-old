@@ -41,8 +41,18 @@
     <layout class="VerticalLayout" gap="30"></layout>
 
     <button compid="testButton">Test Button</button>
-    <div compid="testDataGroup" comp="demoPackage.MyTestGroup" item_renderer="demoPackage.TestItemRenderer">
+    <div compid="testDataGroup" comp="DataGroup" top="30px"
+         style="background-color: #dcdcdc;"
+         width="100%"
+         height="100%"
+         item_renderer="demoPackage.TestItemRenderer">
 
-        <layout class="HorizontalLayout" gap="30"></layout>
+        <layout class="HorizontalLayout" gap="30" vertical_align="middle" horizontal_align="center"></layout>
+
+        <div comp="Group" width="50%" height="50%">
+            <div width="100%" height="20px"  style="background-color: red;"></div>
+            <div width="50%" height="20px" style="background-color: #4169e1;"></div>
+            <div width="25%" height="20px" style="background-color: #ffd700;"></div>
+        </div>
     </div>
 </div>

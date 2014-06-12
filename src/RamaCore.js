@@ -298,6 +298,13 @@ function ApplicationManager(applicationClass, appNode) {
         var parentNode = appNode.parentNode;
         parentNode.replaceChild(this.stage[0], appNode);
         this.application = new appClass();
+        if (appNode.attributes !== undefined && appNode.attributes.length > 0) {
+
+            for (var j = 0; j < appNode.attributes.length; j++) {
+                var attr = appNode.attributes[j];
+                this.application.setAttribute(attr.name, attr.value);
+            }
+        }
         this.application.applicationManager = this;
         this.application.setAttribute("comp",appNode.getAttribute(R_APP));
         this.stage.addElement(this.application)

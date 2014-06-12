@@ -34,6 +34,8 @@ $r.Class("Skin").extends("Group")(function () {
         this.super.init();
         compileHTMLNode =  $r.bindFunction(compileHTMLNodeFn, this);
         compileHTMLNodeFn(this,$r.skinFactory(skinClass));
+        this.width = "100%"
+        this.height = "100%"
         this.setAttribute("comp", "Skin");
     }
 
@@ -56,9 +58,9 @@ $r.Class("Skin").extends("Group")(function () {
         }
         else {
             component = new $r.Group();
-            component[0] = node;
         }
 
+        component[0] = node;
         return component;
     }
 
@@ -77,8 +79,8 @@ $r.Class("Skin").extends("Group")(function () {
         }
 
         if (node.children !== undefined && node.children.length > 0) {
-            //setting innerHTML to empty so that children are created through normal process
-            component[0].innerHTML = "";
+
+
             for (var i = 0; i < node.children.length; i++) {
                 var childNode = node.children[i];
 
@@ -97,42 +99,43 @@ $r.Class("Skin").extends("Group")(function () {
                         }
                     }
                 }
+
+                //checking if tag name matches a property name in the component and
+                //the property should be an array
+                var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
+                if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
+                {
+                    for (var j = 0; j < childNode.children.length; j++)
+                    {
+                        var childComponent1 = createComponentFromNode(childNode);
+                        compileHTMLNode(childComponent1,childNode);
+                        component[childNodeTagName].push(childComponent1);
+                    }
+
+                }
+                else if(childNodeTagName === $r.LAYOUT) //now checking if the child tag name is layout
+                {
+                    console.log(childNode.getAttribute("class"));
+                    var layoutClass = $r.classFactory(childNode.getAttribute("class"))
+                    if(layoutClass)
+                        component.layout = new layoutClass();
+
+                }
                 else
                 {
-                    //checking if tag name matches a property name in the component and
-                    //the property should be an array
-                    var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
-                    if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
-                    {
-                        for (var j = 0; j < childNode.children.length; j++)
-                        {
-                            var childComponent1 = createComponentFromNode(childNode);
-                            compileHTMLNode(childComponent1,childNode);
-                            component[childNodeTagName].push(childComponent1);
-                        }
 
-                    }
-                    else if(childNodeTagName === $r.LAYOUT) //now checking if the child tag name is layout
+                    var childComponent = createComponentFromNode(childNode);
+                    compileHTMLNode(childComponent,childNode);
+                    if(component.htmlContent)
                     {
-                        console.log(childNode.getAttribute("class"));
-                        var layoutClass = $r.classFactory(childNode.getAttribute("class"))
-                        if(layoutClass)
-                            component.layout = new layoutClass();
-
-                    }
-                    else
-                    {
-
-                        var childComponent = createComponentFromNode(childNode);
-                        compileHTMLNode(childComponent,childNode);
-                        if(component.htmlContent)
-                        {
-                            component.htmlContent.push(childComponent);
-                        }
+                        component.htmlContent.push(childComponent);
                     }
                 }
 
             }
+
+            //setting innerHTML to empty so that children are created through normal process
+            component[0].innerHTML = "";
         }
 
         if(component !== this)
