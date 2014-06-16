@@ -48,89 +48,6 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         this.setStyle("display", value);
     })
 
-    this.get("width",function(){
-        return this.getStyle("width")
-
-    })
-    this.set("width",function(value){
-        this.setStyle("width", value);
-    })
-
-    this.get("height",function(){
-        return this.getStyle("height")
-
-    })
-    this.set("height",function(value){
-        this.setStyle("height", value);
-    })
-
-    this.get("top",function(){
-        return this.getStyle("top")
-
-    })
-    this.set("top",function(value){
-        this.setStyle("top", value);
-    })
-
-    this.get("bottom",function(){
-        return this.getStyle("bottom")
-
-    })
-    this.set("bottom",function(value){
-        this.setStyle("bottom", value);
-    })
-
-    this.get("left",function(){
-        return this.getStyle("left")
-
-    })
-    this.set("left",function(value){
-        this.setStyle("left", value);
-    })
-
-    this.get("right",function(){
-        return this.getStyle("right")
-
-    })
-    this.set("right",function(value){
-        this.setStyle("right", value);
-    })
-
-    this.get("paddingLeft",function(){
-        return this.getStyle("paddingLeft")
-
-    })
-    this.set("paddingLeft",function(value){
-        this.setStyle("paddingLeft", value);
-    })
-
-    this.get("paddingRight",function(){
-        return this.getStyle("paddingRight")
-
-    })
-    this.set("paddingRight",function(value){
-        this.setStyle("paddingRight", value);
-    })
-
-    this.get("paddingTop",function(){
-        return this.getStyle("paddingTop")
-
-    })
-    this.set("paddingTop",function(value){
-        this.setStyle("paddingTop", value);
-    })
-
-    this.get("paddingBottom",function(){
-        return this.getStyle("paddingBottom")
-
-    })
-    this.set("paddingBottom",function(value){
-        this.setStyle("paddingBottom", value);
-    })
-
-
-
-
     this.find = function(selector){
         return $r.find(selector, this[0]);
     };
@@ -139,7 +56,6 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
         if (this.initialized)
             return;
-        this.setStyle("position", "absolute");
         this.$$createChildren();
         this.$$childrenCreated();
         this.initialized = true;

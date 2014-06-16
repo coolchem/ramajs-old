@@ -105,20 +105,30 @@ $r.Class("Skin").extends("Group")(function () {
                 var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
                 if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
                 {
-                    for (var j = 0; j < childNode.children.length; j++)
+                    for (var k = 0; k < childNode.children.length; k++)
                     {
-                        var childComponent1 = createComponentFromNode(childNode);
-                        compileHTMLNode(childComponent1,childNode);
+                        var childComponent1 = createComponentFromNode(childNode.children[k]);
+                        compileHTMLNode(childComponent1,childNode.children[k]);
                         component[childNodeTagName].push(childComponent1);
                     }
 
                 }
                 else if(childNodeTagName === $r.LAYOUT) //now checking if the child tag name is layout
                 {
-                    console.log(childNode.getAttribute("class"));
-                    var layoutClass = $r.classFactory(childNode.getAttribute("class"))
+                    //Removing layout support to be addressed later
+/*                    var layoutClass = $r.classFactory(childNode.getAttribute("class"))
                     if(layoutClass)
+                    {
                         component.layout = new layoutClass();
+                        for (var j = 0; j < childNode.attributes.length; j++) {
+                            var attr = childNode.attributes[j];
+                            component.layout[$r.camelCase(attr.name)] = attr.value
+
+                            if(component !== this)
+                                registerStateManagedComponents(component.layout, attr.name, attr.value);
+                        }
+                    }*/
+
 
                 }
                 else
