@@ -91,7 +91,8 @@ $r.Class("Component").extends("ComponentBase")(function () {
 
     function validateSkinStateFn(){
 
-        _skinElement.currentState = _currentState;
+        if(_skinElement)
+            _skinElement.currentState = _currentState;
     }
 
     function validateSkinChangeFn(){

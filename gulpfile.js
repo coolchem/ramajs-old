@@ -46,5 +46,10 @@ gulp.task('pushToRamajsWebsite', function () {
             .pipe(gulp.dest('../ramajs.org/build/lib/'));
 });
 
+gulp.task('pushToTODO-Rama', function () {
+    return gulp.src("build/**/*")
+            .pipe(gulp.dest('../TODO-Rama/lib/'));
+});
+
 
 gulp.task('default', ['skins', 'scripts', 'styles']);

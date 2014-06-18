@@ -33,10 +33,18 @@ $r.Class("Skin").extends("Group")(function () {
     this.init = function(skinClass){
         this.super.init();
         compileHTMLNode =  $r.bindFunction(compileHTMLNodeFn, this);
-        compileHTMLNodeFn(this,$r.skinFactory(skinClass));
+        compileHTMLNode(this,$r.skinFactory(skinClass));
         this.width = "100%"
         this.height = "100%"
         this.setAttribute("comp", "Skin");
+        for(var stateName in skinStates)
+        {
+            var state = skinStates[stateName];
+            if(stateManagedProperties.hasOwnProperty(stateName))
+            {
+                state.registerComponents(stateManagedProperties[stateName])
+            }
+        }
     }
 
     this.getSkinPart = function (compId) {
@@ -84,6 +92,7 @@ $r.Class("Skin").extends("Group")(function () {
             for (var i = 0; i < node.children.length; i++) {
                 var childNode = node.children[i];
 
+                var continueProcessingNode = true;
                 if(component === this)
                 {
                     if(childNode.tagName.toLowerCase() === $r.STATES)
@@ -97,48 +106,52 @@ $r.Class("Skin").extends("Group")(function () {
                                 skinStates[state.name] = state;
                             }
                         }
+
+                        continueProcessingNode = false;
                     }
                 }
 
-                //checking if tag name matches a property name in the component and
-                //the property should be an array
-                var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
-                if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
-                {
-                    for (var k = 0; k < childNode.children.length; k++)
+                if(continueProcessingNode){
+                    //checking if tag name matches a property name in the component and
+                    //the property should be an array
+                    var childNodeTagName = $r.camelCase(childNode.tagName.toLowerCase());
+                    if(component[childNodeTagName] &&  component[childNodeTagName] instanceof Array)
                     {
-                        var childComponent1 = createComponentFromNode(childNode.children[k]);
-                        compileHTMLNode(childComponent1,childNode.children[k]);
-                        component[childNodeTagName].push(childComponent1);
-                    }
-
-                }
-                else if(childNodeTagName === $r.LAYOUT) //now checking if the child tag name is layout
-                {
-                    //Removing layout support to be addressed later
-/*                    var layoutClass = $r.classFactory(childNode.getAttribute("class"))
-                    if(layoutClass)
-                    {
-                        component.layout = new layoutClass();
-                        for (var j = 0; j < childNode.attributes.length; j++) {
-                            var attr = childNode.attributes[j];
-                            component.layout[$r.camelCase(attr.name)] = attr.value
-
-                            if(component !== this)
-                                registerStateManagedComponents(component.layout, attr.name, attr.value);
+                        for (var k = 0; k < childNode.children.length; k++)
+                        {
+                            var childComponent1 = createComponentFromNode(childNode.children[k]);
+                            compileHTMLNode(childComponent1,childNode.children[k]);
+                            component[childNodeTagName].push(childComponent1);
                         }
-                    }*/
 
-
-                }
-                else
-                {
-
-                    var childComponent = createComponentFromNode(childNode);
-                    compileHTMLNode(childComponent,childNode);
-                    if(component.htmlContent)
+                    }
+                    else if(childNodeTagName === $r.LAYOUT) //now checking if the child tag name is layout
                     {
-                        component.htmlContent.push(childComponent);
+                        //Removing layout support to be addressed later
+                        /*                    var layoutClass = $r.classFactory(childNode.getAttribute("class"))
+                         if(layoutClass)
+                         {
+                         component.layout = new layoutClass();
+                         for (var j = 0; j < childNode.attributes.length; j++) {
+                         var attr = childNode.attributes[j];
+                         component.layout[$r.camelCase(attr.name)] = attr.value
+
+                         if(component !== this)
+                         registerStateManagedComponents(component.layout, attr.name, attr.value);
+                         }
+                         }*/
+
+
+                    }
+                    else
+                    {
+
+                        var childComponent = createComponentFromNode(childNode);
+                        compileHTMLNode(childComponent,childNode);
+                        if(component.htmlContent)
+                        {
+                            component.htmlContent.push(childComponent);
+                        }
                     }
                 }
 
@@ -156,7 +169,7 @@ $r.Class("Skin").extends("Group")(function () {
 
     function registerSkinPart(component) {
 
-        var componentAttr = component.getAttribute(COMP_ID);
+        var componentAttr = component.getAttribute("id");
         if (componentAttr !== null && componentAttr !== undefined && componentAttr !== "") {
             _compiledElements[componentAttr] = component;
         }

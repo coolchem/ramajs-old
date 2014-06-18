@@ -285,18 +285,9 @@ function ApplicationManager(applicationClass, appNode) {
     this.application = null;
     this.applicationNode = appNode;
 
-    //Creating a stage to be the parent for all display objects.
-    // stage will be marked as having a position absolute.
-    this.stage = new $r.Stage();
-    this.stage.setStyle("position", "absolute");
-    this.stage.setStyle("width", "100%");
-    this.stage.setStyle("height", "100%");
-
 
     this.initialize = function () {
 
-        var parentNode = appNode.parentNode;
-        parentNode.replaceChild(this.stage[0], appNode);
         this.application = new appClass();
         if (appNode.attributes !== undefined && appNode.attributes.length > 0) {
 
@@ -307,7 +298,10 @@ function ApplicationManager(applicationClass, appNode) {
         }
         this.application.applicationManager = this;
         this.application.setAttribute("comp",appNode.getAttribute(R_APP));
-        this.stage.addElement(this.application)
+        this.application.parentApplication = this.application;
+        var parentNode = appNode.parentNode;
+        parentNode.replaceChild(this.application[0], appNode);
+        this.application.initialize();
     }
 
 }

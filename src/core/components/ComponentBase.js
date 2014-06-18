@@ -1,10 +1,10 @@
 $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
 
-    this.compid = "";
+    this.id = "";
     this.comp = "";
     this.initialized = false;
-    this.stage = null;
+    this.parentApplication = null;
 
     var _elements = new $r.ArrayList();
 
@@ -84,7 +84,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         }
 
         element.parentComponent = this;
-        element.stage = this.stage;
+        element.parentApplication = this.parentApplication;
         element.initialize();
         this.elements.addItemAt(element,index);
 
