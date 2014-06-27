@@ -21,7 +21,7 @@ $r.Class("EventDispatcher")(function () {
     };
 
     this.removeEventListener = function (type, listener, useCapture) {
-        this[0].removeEventListener.apply(this[0], arguments);
+        this[0].removeEventListener(type, listener,useCapture);
 
         if(eventListenersDictionary[type] !== undefined && eventListenersDictionary[type] !== null)
         {
@@ -41,10 +41,15 @@ $r.Class("EventDispatcher")(function () {
 
     this.dispatchEvent = function (event) {
 
+        var eventObject = event;
+        if(event.getEventObject)
+        {
+            eventObject = event.getEventObject();
+        }
         if (document.createEvent) {
-            this[0].dispatchEvent(event);
+            this[0].dispatchEvent(eventObject);
         } else {
-            this[0].fireEvent("on" + event.eventType, event);
+            this[0].fireEvent("on" + eventObject.eventType, eventObject);
         }
 
     };

@@ -15,7 +15,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
     };
 
     this.get("textContent",function(){
-        return this[0].textContent;
+            return this[0].textContent;
 
     })
     this.set("textContent",function(value){
@@ -132,11 +132,11 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
     };
 
     this.setStyle = function(styleName, value){
-        this[0].style[styleName] = value;
+            this[0].style[styleName] = value;
     }
 
     this.getStyle = function(styleName){
-        return this[0].style[styleName];
+            return this[0].style[styleName];
     }
 
 

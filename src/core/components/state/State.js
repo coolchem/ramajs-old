@@ -16,8 +16,8 @@ $r.Class("State").extends("EventDispatcher")(function () {
 
     this.init = function(name,stateGroups){
         this.super.init();
-        _name = name;
-        _stateGroups = stateGroups;
+    _name = name;
+    _stateGroups = stateGroups;
     }
 
     this.registerComponents = function(componentsArray){

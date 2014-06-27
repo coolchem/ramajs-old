@@ -4,19 +4,19 @@ $r.Class("Component").extends("ComponentBase")(function () {
     var attachSkin,findSkinParts,detachSkin,clearSkinParts,
             validateSkinChange,validateSkinState;
 
+    attachSkin = this.bind(attachSkinFn);
+    detachSkin = this.bind(detachSkinFn);
+    findSkinParts = this.bind(findSkinPartsFn);
+    clearSkinParts = this.bind(clearSkinPartsFn);
+    validateSkinChange = this.bind(validateSkinChangeFn);
+    validateSkinState =  this.bind(validateSkinStateFn);
+
     var _skinChanged = false;
 
     this.init = function(){
 
         this.super.init();
-        attachSkin = $r.bindFunction(attachSkinFn, this);
-        detachSkin = $r.bindFunction(detachSkinFn, this);
-        findSkinParts = $r.bindFunction(findSkinPartsFn, this);
-        clearSkinParts = $r.bindFunction(clearSkinPartsFn, this);
-        validateSkinChange = $r.bindFunction(validateSkinChangeFn, this);
-        validateSkinState =  $r.bindFunction(validateSkinStateFn, this);
-        this.setAttribute("comp", "Component");
-
+    this.setAttribute("comp", "Component");
     }
 
     var _skinElement = null;

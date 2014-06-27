@@ -1,6 +1,7 @@
 $r.Class("Skin").extends("Group")(function () {
 
-    var compileHTMLNode;
+    var compileHTMLNode = this.bind(compileHTMLNodeFn);
+
     var skinStates = {};
 
     var _compiledElements = {};
@@ -32,10 +33,7 @@ $r.Class("Skin").extends("Group")(function () {
 
     this.init = function(skinClass){
         this.super.init();
-        compileHTMLNode =  $r.bindFunction(compileHTMLNodeFn, this);
         compileHTMLNode(this,$r.skinFactory(skinClass));
-        this.width = "100%"
-        this.height = "100%"
         this.setAttribute("comp", "Skin");
         for(var stateName in skinStates)
         {

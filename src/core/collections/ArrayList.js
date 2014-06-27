@@ -1,12 +1,20 @@
 $r.Class("ArrayList").extends("EventDispatcher")(function () {
 
+    var isFunction = function (fn) {
+        var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
+        if (!isFunc && typeof window !== 'undefined') {
+            isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
+        }
+        return isFunc;
+    };
+
     this.init = function (source) {
 
         this.super.init();
 
-        disableEvents();
-        this.source = source;
-        enableEvents();
+    disableEvents();
+    this.source = source;
+    enableEvents();
 
     };
 
@@ -25,9 +33,9 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
         _source = s ? s : [];
         len = _source.length;
         if (_dispatchEvents == 0) {
-            var event = new $r.CollectionEvent();
-            event.event.kind = $r.CollectionEventKind.RESET;
-            this.dispatchEvent(event.event);
+            var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
+            event.kind = $r.CollectionEventKind.RESET;
+            this.dispatchEvent(event);
         }
     });
 
@@ -143,14 +151,14 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
             var hasCollectionListener = this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE);
             if (hasCollectionListener) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.event.kind = $r.CollectionEventKind.REPLACE;
-                event.event.location = index;
+                event.kind = $r.CollectionEventKind.REPLACE;
+                event.location = index;
                 var updateInfo = {};
                 updateInfo.oldValue = oldItem;
                 updateInfo.newValue = item;
                 updateInfo.property = index;
-                event.event.items.push(updateInfo);
-                this.dispatchEvent(event.event);
+                event.items.push(updateInfo);
+                this.dispatchEvent(event);
             }
         }
         return oldItem;
@@ -161,7 +169,18 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
 
     }
 
+    this.forEach = function(fn,context){
 
+        if (!isFunction(fn)) {
+            throw new TypeError('iterator must be a function');
+        }
+
+        for(var i = 0; i < this.length; i++)
+        {
+            fn.call(context, this.source[i]);
+        }
+
+    }
     function enableEvents() {
         _dispatchEvents++;
         if (_dispatchEvents > 0)
@@ -181,10 +200,10 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
         if (_dispatchEvents == 0) {
             if (_this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE)) {
                 var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.event.kind = kind;
-                event.event.items.push(item);
-                event.event.location = location;
-                _this.dispatchEvent(event.event);
+                event.kind = kind;
+                event.items.push(item);
+                event.location = location;
+                _this.dispatchEvent(event);
             }
 
         }

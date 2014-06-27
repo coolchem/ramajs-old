@@ -5,18 +5,15 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
 
     var setDataProvider,itemRemoved,itemAdded,dataProvider_collectionChangeHandler;
 
+
+    setDataProvider = this.bind(setDataProviderFn);
+    itemRemoved = this.bind(itemRemovedFn);
+    itemAdded = this.bind(itemAddedFn);
+    dataProvider_collectionChangeHandler = this.bind(dataProvider_collectionChangeHandlerFn);
+
     this.init = function(){
         this.super.init();
-
-        setDataProvider = $r.bindFunction(setDataProviderFn, this);
-
-        itemRemoved = $r.bindFunction(itemRemovedFn, this);
-
-        itemAdded = $r.bindFunction(itemAddedFn, this);
-        dataProvider_collectionChangeHandler = $r.bindFunction(dataProvider_collectionChangeHandlerFn, this)
-
         this.setAttribute("comp", "DataGroup");
-
     }
 
     var _dataProvider = null;
@@ -33,7 +30,7 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
         _dataProvider = value;
         setDataProvider()
         var event = new $r.Event("dataProviderChanged");
-        this.dispatchEvent(event.event);
+        this.dispatchEvent(event);
 
 
     });
@@ -79,8 +76,8 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
 
     function setDataProviderFn() {
         if (this.initialized) {
-            removeAllItemRenderers();
-            createItemRenderers();
+            removeAllItemRenderers(this);
+            createItemRenderers(this);
             addDataProviderListener();
 
             this.$$updateDisplay();
@@ -88,9 +85,11 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
     }
 
 
-    function removeAllItemRenderers() {
+    function removeAllItemRenderers(_this) {
 
+        _this.removeAllElements();
         indexToRenderer = [];
+
     }
 
     function addDataProviderListener() {
@@ -156,6 +155,8 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
             }
         }
 
+        event.stopImmediatePropagation();
+
         this.$$updateDisplay();
     }
 
@@ -203,9 +204,9 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
         return null;
     }
 
-    function createItemRenderers() {
+    function createItemRenderers(_this) {
         if (!_dataProvider) {
-            removeAllItemRenderers();
+            removeAllItemRenderers(_this);
             return;
         }
 
