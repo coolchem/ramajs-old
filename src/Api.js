@@ -5,7 +5,6 @@ $r.package = rPackage;
 //All the functions and properties which are exposed
 $r.classFactory = classFactory;
 $r.skinFactory = skinFactory;
-$r.find = Sizzle;
 $r.Application = Application;
 $r.isDefined = isDefined;
 $r.bindFunction = bindFunction;

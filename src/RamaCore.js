@@ -250,7 +250,7 @@ function Application(applicationname, constructor) {
 function initApplications() {
 
 
-    var appNodes = $r.find('[' + R_APP + ']');
+    var appNodes = document.querySelectorAll('[' + R_APP + ']');
 
     for (var i = 0; i < appNodes.length; i++) {
         var appNode = appNodes[i];

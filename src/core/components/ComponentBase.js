@@ -48,10 +48,6 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         this.setStyle("display", value);
     })
 
-    this.find = function(selector){
-        return $r.find(selector, this[0]);
-    };
-
     this.initialize = function () {
 
         if (this.initialized)

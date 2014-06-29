@@ -1,11 +1,12 @@
-$r.Class("Model").extends("EventDispatcher")(function () {
+$r.Class("Model")(function () {
 
     var bindedPropertiesDictionary = {};
     var observedPropertiesDictionary = {};
 
+    var handleBindingsAndObservers = this.bind(handleBindingsAndObserversFn);
+
     this.init = function (simpleObject) {
 
-      this.super.init();
       if(simpleObject !== null && simpleObject !== undefined)
       {
 
@@ -15,9 +16,30 @@ $r.Class("Model").extends("EventDispatcher")(function () {
 
     this.bindProperty = function(propertyName){
 
+        createGettersAndSetters(propertyName,this);
         var returnObj = {}
 
-        returnObj.with = function (propertyName, context) {
+        returnObj.with = function (contextPropertyName, context) {
+
+            if(!bindedPropertiesDictionary[propertyName])
+            {
+                bindedPropertiesDictionary[propertyName] = new $r.Dictionary();
+                bindedPropertiesDictionary[propertyName].put(context,new $r.ArrayList([contextPropertyName]));
+            }
+            else
+            {
+                var propArray = bindedPropertiesDictionary[propertyName].get(context);
+                if(!propArray){
+                    bindedPropertiesDictionary[propertyName].put(context,new $r.ArrayList([contextPropertyName]));
+                }
+                else
+                {
+                   if(propArray.getItemIndex(contextPropertyName) === -1)
+                   {
+                       propArray.addItem(contextPropertyName);
+                   }
+                }
+            }
 
         }
 
@@ -29,10 +51,11 @@ $r.Class("Model").extends("EventDispatcher")(function () {
 
     this.observe = function(propertyName, handler){
 
+      createGettersAndSetters(propertyName,this);
       if(!observedPropertiesDictionary[propertyName])
       {
           observedPropertiesDictionary[propertyName] = new $r.ArrayList();
-          createGettersAndSetters(propertyName,this);
+
       }
 
       if(observedPropertiesDictionary[propertyName].getItemIndex(handler) === -1)
@@ -43,18 +66,24 @@ $r.Class("Model").extends("EventDispatcher")(function () {
 
     function createGettersAndSetters(propertyName,context){
 
+        var propertyDescriptor = Object.getOwnPropertyDescriptor(context, propertyName);
         var propertyValue = context[propertyName];
+        if (propertyDescriptor === undefined || !(propertyDescriptor.hasOwnProperty("get") && propertyDescriptor.hasOwnProperty("set")))
+        {
 
-        Object.defineProperty(context, propertyName,
-                {   set:setter,
-                    get:getter,
-                    enumerable:true,
-                    configurable:true
-                });
+            Object.defineProperty(context, propertyName,
+                    {   set:setter,
+                        get:getter,
+                        enumerable:true,
+                        configurable:true
+                    });
+
+
+        }
 
         function getter(){
 
-           return propertyValue;
+            return propertyValue;
         }
 
         function setter(value){
@@ -67,10 +96,9 @@ $r.Class("Model").extends("EventDispatcher")(function () {
 
 
         }
-
     }
 
-    function handleBindingsAndObservers(propertyName){
+    function handleBindingsAndObserversFn(propertyName){
 
       if(observedPropertiesDictionary[propertyName] && observedPropertiesDictionary[propertyName].length > 0)
       {
@@ -78,6 +106,17 @@ $r.Class("Model").extends("EventDispatcher")(function () {
             item();
           })
       }
+
+        if(bindedPropertiesDictionary[propertyName])
+        {
+            bindedPropertiesDictionary[propertyName].forEach(function(item){
+                item.value.forEach(function(prop){
+
+                    item.key[prop] = this[propertyName];
+
+                }, this)
+            },this)
+        }
     }
 
-})
+});

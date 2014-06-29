@@ -1,6 +1,15 @@
-$r.Class("Dictionary").extends("Class")(function(){
+$r.Class("Dictionary")(function(){
 
     var dictionaryArray = [];
+
+    var isFunction = function (fn) {
+        var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
+        if (!isFunc && typeof window !== 'undefined') {
+            isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
+        }
+        return isFunc;
+    };
+
 
     this.get = function(key){
 
@@ -45,6 +54,19 @@ $r.Class("Dictionary").extends("Class")(function(){
         {
             return false;
         }
+    }
+
+    this.forEach = function(fn,context){
+
+        if (!isFunction(fn)) {
+            throw new TypeError('iterator must be a function');
+        }
+
+        for(var i = 0; i < dictionaryArray.length; i++)
+        {
+            fn.call(context, dictionaryArray[i]);
+        }
+
     }
 
     function getKeyItem(key){
