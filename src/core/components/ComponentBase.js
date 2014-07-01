@@ -92,8 +92,9 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
     };
 
     this.removeAllElements = function (element) {
-
-        this[0].innerHTML = "";
+        while (this[0].firstChild) {
+            this[0].removeChild(this[0].firstChild);
+        }
         this.elements = new $r.ArrayList();
     };
 

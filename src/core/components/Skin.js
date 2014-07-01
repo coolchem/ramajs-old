@@ -61,9 +61,11 @@ $r.Class("Skin").extends("Group")(function () {
 
         if (componentClass !== undefined && componentClass != null && componentClass !== "") {
             component = new componentClass();
+            component.__isRamaSupportedComponent__ = true;
         }
         else {
             component = new $r.Group();
+            component.__isRamaSupportedComponent__ = false;
         }
 
         component[0] = node;
@@ -156,7 +158,8 @@ $r.Class("Skin").extends("Group")(function () {
             }
 
             //setting innerHTML to empty so that children are created through normal process
-            component[0].innerHTML = "";
+            if(component.__isRamaSupportedComponent__)
+                component.removeAllElements();
         }
 
         if(component !== this)
