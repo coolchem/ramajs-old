@@ -6,5 +6,5 @@ I started working on this framework with an intention to create a component fram
 The focus of this framework is on customization and reusability of views, which is achieved through concept of Skinning.
 The framework work is still in progress and I will be pretty soon looking for contributors to help build on it.
 
-* TODO-Rama: http://github.com/coolchem/TODO-Rama
+* TODO-Rama (under development): http://github.com/coolchem/TODO-Rama
 * Demo todo app at: http://coolchem.github.io
