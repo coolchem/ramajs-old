@@ -1,8 +1,11 @@
 
 $r.Class("State").extends("EventDispatcher")(function () {
 
-    var _stateManagedComponents = [];
+    this.propertySetters = [];
     var _name;
+
+    var _initialized = false;
+
     this.get('name', function(){
 
         return _name;
@@ -16,25 +19,25 @@ $r.Class("State").extends("EventDispatcher")(function () {
 
     this.init = function(name,stateGroups){
         this.super.init();
-    _name = name;
-    _stateGroups = stateGroups;
+        _name = name;
+        _stateGroups = stateGroups;
     }
 
-    this.registerComponents = function(componentsArray){
+    this.initialize = function(){
 
-        for(var i = 0; i<componentsArray.length; i++)
+        if(!_initialized)
         {
-            var componentItem = componentsArray[i];
-            _stateManagedComponents.push(componentItem);
+
+            _initialized = true;
         }
 
     }
 
     this.apply = function(){
 
-        for(var i = 0; i<_stateManagedComponents.length; i++)
+        for(var i = 0; i< this.propertySetters.length; i++)
         {
-            var componentItem = _stateManagedComponents[i];
+            var componentItem = this.propertySetters[i];
 
             componentItem.component[componentItem.propertyName] = componentItem.value;
         }

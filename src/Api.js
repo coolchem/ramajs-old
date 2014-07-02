@@ -12,6 +12,8 @@ $r.camelCase = camelCase;
 $r.cleanWhitespace = cleanWhitespace;
 $r.arrayUtil = ArrayUtil();
 $r.setupDefaultsForArguments =setupDefaultsForArguments;
+$r.forEach = forEach;
+$r.trim = trim;
 
 $r.STATES = STATES;
 $r.LAYOUT = LAYOUT;

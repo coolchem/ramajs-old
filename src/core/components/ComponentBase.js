@@ -48,6 +48,14 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         this.setStyle("display", value);
     })
 
+    this.get("class",function(){
+        return this.getAttribute('class')
+
+    })
+    this.set("class",function(value){
+        this.setAttribute('class', $r.trim(value));
+    })
+
     this.initialize = function () {
 
         if (this.initialized)
@@ -116,16 +124,8 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
     this.setAttribute = function(name, value)
     {
-        var nameAndState = name.split('.');
-        var propertyName = $r.camelCase(nameAndState[0].toLowerCase());
-        if(typeof this[propertyName] !== "function")
-        {
-            if(nameAndState.length === 1)
-            {
-                this[0].setAttribute(nameAndState[0], value);
-                this[propertyName] = value;
-            }
-        }
+        this[0].setAttribute(name, value);
+
     };
 
     this.setStyle = function(styleName, value){
@@ -136,6 +136,51 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
             return this[0].style[styleName];
     }
 
+    this.hasClass = function (selector) {
+        if (!this.getAttribute) return false;
+        return ((" " + (this.getAttribute('class') || '') + " ").replace(/[\n\t]/g, " ").
+                indexOf( " " + selector + " " ) > -1);
+    }
+
+    this.removeClass = function(cssClasses) {
+        if (cssClasses && this.setAttribute) {
+            $r.forEach(cssClasses.split(' '), function(cssClass) {
+                this[0].setAttribute('class', trim(
+                        (" " + (this.getAttribute('class') || '') + " ")
+                                .replace(/[\n\t]/g, " ")
+                                .replace(" " + $r.trim(cssClass) + " ", " "))
+                );
+            }, this);
+        }
+    }
+
+    this.addClass = function(cssClasses) {
+        if (cssClasses && this.setAttribute) {
+            var existingClasses = (' ' + (this.getAttribute('class') || '') + ' ')
+                    .replace(/[\n\t]/g, " ");
+
+            $r.forEach(cssClasses.split(' '), function(cssClass) {
+                cssClass = $r.trim(cssClass);
+                if (existingClasses.indexOf(' ' + cssClass + ' ') === -1) {
+                    existingClasses += cssClass + ' ';
+                }
+            }, this);
+
+            this[0].setAttribute('class', $r.trim(existingClasses));
+        }
+    }
+
+    this.toggleClass = function(selector) {
+        if (selector) {
+            $r.forEach(selector.split(' '), function(className){
+                var classCondition = !this.hasClass(className);
+                if(classCondition)
+                    this.addClass(className)
+                else
+                    this.removeClass(className)
+            }, this);
+        }
+    }
 
     this.$$createChildren = function () {
 

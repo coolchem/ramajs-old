@@ -2,13 +2,15 @@ $r.Class("Skin").extends("Group")(function () {
 
     var compileHTMLNode = this.bind(compileHTMLNodeFn);
 
-    var skinStates = {};
+    var skinStates = [];
 
     var _compiledElements = {};
 
     var stateManagedProperties = {};
 
     var _currentState = "";
+
+    var setCurrentState = this.bind(setCurrentStateFn);
 
     this.ownerComponent = null;
 
@@ -19,30 +21,24 @@ $r.Class("Skin").extends("Group")(function () {
 
     this.set("currentState",function(value){
 
-        if(skinStates[value])
-        {
-            _currentState = value;
-            skinStates[_currentState].apply();
+        if (_currentState !== value) {
+            setCurrentState(value);
         }
-        else if(value !== "")
-        {
-            throw new ReferenceError("State not Found Exception: The state '" + value +
-                    "' being set on the component is not found in the skin");
-        }
+
     })
 
     this.init = function(skinClass){
         this.super.init();
-        compileHTMLNode(this,$r.skinFactory(skinClass));
+        compileHTMLNode(this, $r.skinFactory(skinClass));
         this.setAttribute("comp", "Skin");
-        for(var stateName in skinStates)
-        {
-            var state = skinStates[stateName];
-            if(stateManagedProperties.hasOwnProperty(stateName))
-            {
-                state.registerComponents(stateManagedProperties[stateName])
+
+        $r.forEach(skinStates, function (state) {
+            if (stateManagedProperties.hasOwnProperty(state.name)) {
+
+                state.propertySetters = stateManagedProperties[state.name];
             }
-        }
+
+        })
     }
 
     this.getSkinPart = function (compId) {
@@ -79,10 +75,8 @@ $r.Class("Skin").extends("Group")(function () {
 
             for (var j = 0; j < node.attributes.length; j++) {
                 var attr = node.attributes[j];
-                component.setAttribute(attr.name, attr.value);
+                registerStateManagedComponents(component, attr.name, attr.value);
 
-                if(component !== this)
-                    registerStateManagedComponents(component, attr.name, attr.value);
             }
         }
 
@@ -103,7 +97,7 @@ $r.Class("Skin").extends("Group")(function () {
                             if(stateNode.getAttribute("name") !== null && stateNode.getAttribute("name") !== undefined)
                             {
                                 var state = new $r.State(stateNode.getAttribute("name"), stateNode.getAttribute("stateGroups"));
-                                skinStates[state.name] = state;
+                                skinStates.push(state);
                             }
                         }
 
@@ -158,7 +152,7 @@ $r.Class("Skin").extends("Group")(function () {
             }
 
             //setting innerHTML to empty so that children are created through normal process
-            if(component.__isRamaSupportedComponent__)
+            if(!component.__isRamaSupportedComponent__)
                 component.removeAllElements();
         }
 
@@ -189,10 +183,100 @@ $r.Class("Skin").extends("Group")(function () {
                     stateManagedProperties[stateName] = [];
                 }
 
-                stateManagedProperties[stateName].push({component:component,propertyName:propertyName,value:attrValue})
+                var propertySetter = new $r.PropertySetter(component,propertyName,attrValue)
+
+                stateManagedProperties[stateName].push(propertySetter);
+            }
+            else
+            {
+                component[propertyName] =  attrValue;
             }
         }
 
+    }
+
+
+    function setCurrentStateFn(stateName) {
+
+        var oldState = getState(_currentState);
+
+        if (this.initialized) {
+
+            if(isBaseState(stateName))
+            {
+                removeState(getState(oldState));
+                _currentState = stateName;
+
+            }
+            else
+            {
+
+                var destination = getState(stateName);
+
+                initializeState(stateName);
+
+                // Remove the existing state
+                removeState(oldState);
+                _currentState = stateName;
+
+                applyState(destination);
+            }
+
+        }
+    }
+
+    function isBaseState(stateName) {
+        return !stateName || stateName == "";
+    }
+
+    function initializeState(stateName)
+    {
+        var state = getState(stateName)
+
+        if (state)
+        {
+            state.initialize();
+        }
+    }
+
+    function removeState(state){
+
+        if(state)
+        {
+            for(var i = 0; i< state.propertySetters.length; i++)
+            {
+                state.propertySetters[i].remove();
+            }
+        }
+
+    }
+    function applyState(state){
+
+        if(state)
+        {
+            for(var i = 0; i< state.propertySetters.length; i++)
+            {
+                state.propertySetters[i].apply();
+            }
+        }
+
+    }
+
+    function getState(stateName)
+    {
+        if (!skinStates || isBaseState(stateName))
+            return null;
+
+        for (var i = 0; i < skinStates.length; i++)
+        {
+            if (skinStates[i].name == stateName)
+                return skinStates[i];
+        }
+
+        throw new ReferenceError("State not Found Exception: The state '" + value +
+                "' being set on the component is not found in the skin");
+
+        return null;
     }
 
 })
