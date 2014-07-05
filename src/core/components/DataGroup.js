@@ -137,6 +137,7 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
             {
                 // from a filter or sort...let's just reset everything
                 removeDataProviderListener();
+                setDataProvider();
                 break;
             }
 

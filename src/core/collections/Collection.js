@@ -1,20 +1,47 @@
 $r.Class("Collection").extends("EventDispatcher")(function () {
 
-    var isFunction = function (fn) {
-        var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
-        if (!isFunc && typeof window !== 'undefined') {
-            isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
-        }
-        return isFunc;
-    };
+
+    var localIndex;
+    var list;
+
+    var sort;
+    var filterFunction = null;
+
+    var internalRefresh = this.bind(internalRefreshFn);
+    var dataProvider_collectionChangeHandler = this.bind(dataProvider_collectionChangeHandlerFn);
+
+
+
+    this.get("sort", function(){
+
+        return sort;
+
+    })
+
+
+    this.set("sort", function(value){
+
+        sort = value;
+
+    })
+
+    this.set("filterFunction", function(value){
+
+        filterFunction = value;
+
+    })
+
+    this.get("filterFunction", function(){
+
+        return filterFunction;
+
+    })
+
 
     this.init = function (source) {
 
         this.super.init();
-
-    disableEvents();
-    this.source = source;
-    enableEvents();
+        this.source = source;
 
     };
 
@@ -24,27 +51,31 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
 
     this.get("source", function () {
 
-        return _source;
+        if(list)
+            return list.source;
+        return null;
     });
 
     this.set("source", function (s) {
-        var i;
-        var len
-        _source = s ? s : [];
-        len = _source.length;
-        if (_dispatchEvents == 0) {
-            var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-            event.kind = $r.CollectionEventKind.RESET;
-            this.dispatchEvent(event);
-        }
+        list = new $r.ArrayList(s);
+
+        list.addEventListener($r.CollectionEvent.COLLECTION_CHANGE, dataProvider_collectionChangeHandler);
     });
 
     this.get("length", function () {
 
-        if (_source)
-            return _source.length;
+        if (localIndex)
+        {
+            return localIndex.length;
+        }
+        else if (list)
+        {
+            return list.length;
+        }
         else
+        {
             return 0;
+        }
     });
 
 
@@ -61,8 +92,23 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
             throw new RangeError(message);
         }
 
-        _source.splice(index, 0, item);
-        internalDispatchEvent(this,$r.CollectionEventKind.ADD, item, index);
+        var listIndex = index;
+        //if we're sorted addItemAt is meaningless, just add to the end
+        if (localIndex && sort)
+        {
+            listIndex = list.length;
+        }
+        else if (localIndex && filterFunction != null)
+        {
+            // if end of filtered list, put at end of source list
+            if (listIndex == localIndex.length)
+                listIndex = list.length;
+            // if somewhere in filtered list, find it and insert before it
+            // or at beginning
+            else
+                listIndex = list.getItemIndex(localIndex[index]);
+        }
+        list.addItemAt(item, listIndex);
     }
 
     this.addAll = function (addList) {
@@ -79,7 +125,37 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
     }
 
     this.getItemIndex = function (item) {
-        return $r.arrayUtil.getItemIndex(item, _source);
+        var i;
+
+        if (localIndex && sort)
+        {
+/*            var startIndex = findItem(item, Sort.FIRST_INDEX_MODE);
+            if (startIndex == -1)
+                return -1;
+
+            var endIndex = findItem(item, Sort.LAST_INDEX_MODE);
+            for (i = startIndex; i <= endIndex; i++)
+            {
+                if (localIndex[i] == item)
+                    return i;
+            }
+
+            return -1;*/
+        }
+        else if (localIndex && filterFunction != null)
+        {
+            var len = localIndex.length;
+            for (i = 0; i < len; i++)
+            {
+                if (localIndex[i] == item)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        // fallback
+        return list.getItemIndex(item);
     };
 
     this.removeItem = function (item) {
@@ -99,30 +175,62 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
                     "this collection of length " + this.length;
             throw new RangeError(message);
         }
-
-        var removed = _source.splice(index, 1)[0];
-
-        internalDispatchEvent(this, $r.CollectionEventKind.REMOVE, removed, index);
-        return removed;
+        var listIndex = index;
+        if (localIndex)
+        {
+            var oldItem = localIndex[index];
+            listIndex = list.getItemIndex(oldItem);
+        }
+        return list.removeItemAt(listIndex);
     };
 
     this.removeAll = function () {
 
-        if (this.length > 0) {
-            _source.splice(0, this.length);
-            internalDispatchEvent(this,$r.CollectionEventKind.RESET);
+        var len = this.length;
+        if (len > 0)
+        {
+            if (localIndex)
+            {
+                for (var i = len - 1; i >= 0; i--)
+                {
+                    this.removeItemAt(i);
+                }
+            }
+            else
+            {
+                list.removeAll();
+            }
         }
 
     }
 
     this.toArray = function(){
 
-        return _source.concat();
+        var ret;
+        if (localIndex)
+        {
+            ret = localIndex.concat();
+        }
+        else
+        {
+            ret = list.toArray();
+        }
+        return ret;
     }
 
     this.toString = function(){
 
-        _source.toString();
+        if (localIndex)
+        {
+            return localIndex.toString();
+        }
+        else
+        {
+            if (list && list.toString)
+                return list.toString();
+            else
+                this.className;
+        }
 
     }
 
@@ -133,8 +241,16 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
                     "this collection of length " + this.length;
             throw new RangeError(message);
         }
+        if (localIndex)
+        {
+            return localIndex[index];
+        }
+        else if (list)
+        {
+            return list.getItemAt(index);
+        }
 
-        return _source[index];
+        return null;
     };
 
     this.setItemAt = function (item, index) {
@@ -144,29 +260,26 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
             throw new RangeError(message);
         }
 
-        var oldItem = _source[index];
-        _source[index] = item;
-
-        if (_dispatchEvents == 0) {
-            var hasCollectionListener = this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE);
-            if (hasCollectionListener) {
-                var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.kind = $r.CollectionEventKind.REPLACE;
-                event.location = index;
-                var updateInfo = {};
-                updateInfo.oldValue = oldItem;
-                updateInfo.newValue = item;
-                updateInfo.property = index;
-                event.items.push(updateInfo);
-                this.dispatchEvent(event);
+        var listIndex = index;
+        if (localIndex)
+        {
+            if (index > localIndex.length)
+            {
+                listIndex = list.length;
+            }
+            else
+            {
+                var oldItem = localIndex[index];
+                listIndex = list.getItemIndex(oldItem);
             }
         }
-        return oldItem;
+        return list.setItemAt(item, listIndex);
     }
 
 
     this.refresh = function () {
 
+        internalRefresh(true);
     }
 
     this.forEach = function(fn,context){
@@ -181,33 +294,62 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
         }
 
     }
-    function enableEvents() {
-        _dispatchEvents++;
-        if (_dispatchEvents > 0)
-            _dispatchEvents = 0;
-    }
 
-
-    function disableEvents() {
-        _dispatchEvents--;
-    }
-
-    function itemUpdateHandler(event) {
-        internalDispatchEvent(this,$r.CollectionEventKind.UPDATE, event);
-    }
-
-    function internalDispatchEvent(_this,kind, item, location) {
-        if (_dispatchEvents == 0) {
-            if (_this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE)) {
-                var event = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
-                event.kind = kind;
-                event.items.push(item);
-                event.location = location;
-                _this.dispatchEvent(event);
+    function internalRefreshFn(dispatch)
+    {
+        if (sort || filterFunction != null)
+        {
+            if (list)
+            {
+                localIndex = list.toArray();
+            }
+            else
+            {
+                localIndex = [];
             }
 
+            if (filterFunction != null)
+            {
+                var tmp = [];
+                var len = localIndex.length;
+                for (var i = 0; i < len; i++)
+                {
+                    var item = localIndex[i];
+                    if (filterFunction(item))
+                    {
+                        tmp.push(item);
+                    }
+                }
+                localIndex = tmp;
+            }
+            if (sort)
+            {
+                sort.sort(localIndex);
+                dispatch = true;
+            }
+        }
+        else if (localIndex)
+        {
+            localIndex = null;
+        }
+
+        if (dispatch)
+        {
+            var refreshEvent = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
+            refreshEvent.kind = $r.CollectionEventKind.REFRESH;
+            this.dispatchEvent(refreshEvent);
         }
     }
 
+    function dataProvider_collectionChangeHandlerFn(event) {
+
+        var newEvent = new $r.CollectionEvent($r.CollectionEvent.COLLECTION_CHANGE);
+        for(var propName in newEvent)
+        {
+            if(event.hasOwnProperty(propName))
+                newEvent[propName] = event[propName];
+        }
+        this.dispatchEvent(newEvent);
+    }
 
 })

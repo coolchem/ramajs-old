@@ -30,7 +30,8 @@ $r.Class("Event")(function () {
         //setting all the public properties on the "this" to the event object
         for (var propName in this) {
 
-            event[propName] = this[propName];
+            if(propName !== 'getEventObject')
+                event[propName] = this[propName];
         }
         return event;
 

@@ -349,6 +349,14 @@ function getRemoteSkin(skinURL) {
     return xmlhttp.responseText;
 }
 
+function isFunction (fn) {
+    var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
+    if (!isFunc && typeof window !== 'undefined') {
+        isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
+    }
+    return isFunc;
+};
+
 function isDefined(value) {
     return typeof value !== 'undefined';
 }
@@ -435,13 +443,13 @@ function makeItemObservable(){
             if(!bindedPropertiesDictionary[propertyName])
             {
                 bindedPropertiesDictionary[propertyName] = new $r.Dictionary();
-                bindedPropertiesDictionary[propertyName].put(context,new $r.Collection([contextPropertyName]));
+                bindedPropertiesDictionary[propertyName].put(context,new $r.ArrayList([contextPropertyName]));
             }
             else
             {
                 var propArray = bindedPropertiesDictionary[propertyName].get(context);
                 if(!propArray){
-                    bindedPropertiesDictionary[propertyName].put(context,new $r.Collection([contextPropertyName]));
+                    bindedPropertiesDictionary[propertyName].put(context,new $r.ArrayList([contextPropertyName]));
                 }
                 else
                 {
@@ -465,7 +473,7 @@ function makeItemObservable(){
         createGettersAndSetters(propertyName,this);
         if(!observedPropertiesDictionary[propertyName])
         {
-            observedPropertiesDictionary[propertyName] = new $r.Collection();
+            observedPropertiesDictionary[propertyName] = new $r.ArrayList();
 
         }
 
