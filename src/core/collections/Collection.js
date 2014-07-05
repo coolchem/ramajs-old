@@ -43,6 +43,8 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
         this.super.init();
         this.source = source;
 
+        internalRefreshFn(false);
+
     };
 
     var _dispatchEvents = 0
@@ -290,7 +292,7 @@ $r.Class("Collection").extends("EventDispatcher")(function () {
 
         for(var i = 0; i < this.length; i++)
         {
-            fn.call(context, this.source[i]);
+            fn.call(context, this.getItemAt(i));
         }
 
     }
