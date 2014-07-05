@@ -204,7 +204,7 @@ $r.Class("Skin").extends("Group")(function () {
 
             if(isBaseState(stateName))
             {
-                removeState(getState(oldState));
+                removeState(oldState);
                 _currentState = stateName;
 
             }

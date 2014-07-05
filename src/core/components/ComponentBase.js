@@ -6,7 +6,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
     this.initialized = false;
     this.parentApplication = null;
 
-    var _elements = new $r.ArrayList();
+    var _elements = new $r.Collection();
 
     this.init = function () {
 
@@ -103,7 +103,7 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
         while (this[0].firstChild) {
             this[0].removeChild(this[0].firstChild);
         }
-        this.elements = new $r.ArrayList();
+        this.elements = new $r.Collection();
     };
 
     this.replaceElement = function (element) {

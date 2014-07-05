@@ -9,7 +9,7 @@ ramaFiles = {
       'src/core/collections/events/CollectionEvent.js',
       'src/core/collections/events/CollectionEventKind.js',
       'src/core/collections/utils/ArrayUtil.js',
-      'src/core/collections/ArrayList.js',
+      'src/core/collections/Collection.js',
       'src/core/collections/Dictionary.js',
       'src/core/components/state/State.js',
       'src/core/components/ComponentBase.js',

@@ -1,4 +1,4 @@
-$r.Class("ArrayList").extends("EventDispatcher")(function () {
+$r.Class("Collection").extends("EventDispatcher")(function () {
 
     var isFunction = function (fn) {
         var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
@@ -144,8 +144,8 @@ $r.Class("ArrayList").extends("EventDispatcher")(function () {
             throw new RangeError(message);
         }
 
-        var oldItem = source[index];
-        source[index] = item;
+        var oldItem = _source[index];
+        _source[index] = item;
 
         if (_dispatchEvents == 0) {
             var hasCollectionListener = this.hasEventListener($r.CollectionEvent.COLLECTION_CHANGE);

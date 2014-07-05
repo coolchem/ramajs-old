@@ -8,8 +8,7 @@ $r.Class("EventDispatcher")(function () {
     };
 
     this.addEventListener = function (type, listener, useCapture) {
-        if($r.isDefined(listener))
-            listener = $r.bindFunction(listener, this);
+
         this[0].addEventListener(type,listener,useCapture);
 
         if(eventListenersDictionary[type] === undefined || eventListenersDictionary[type] === null)

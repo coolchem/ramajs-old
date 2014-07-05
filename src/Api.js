@@ -18,6 +18,7 @@ $r.trim = trim;
 $r.STATES = STATES;
 $r.LAYOUT = LAYOUT;
 $r.R_COMP = R_COMP;
+$r.Observable = Observable;
 
 
 
