@@ -16,6 +16,8 @@ $r.Class("EventDispatcher")(function () {
             eventListenersDictionary[type] = [];
         }
 
+        listener.useCapture = useCapture;
+
         eventListenersDictionary[type].push(listener);
     };
 
@@ -51,6 +53,8 @@ $r.Class("EventDispatcher")(function () {
             this[0].fireEvent("on" + eventObject.eventType, eventObject);
         }
 
+        return !eventObject.defaultPrevented;
+
     };
 
     this.hasEventListener = function(type){
@@ -62,6 +66,22 @@ $r.Class("EventDispatcher")(function () {
 
         return false;
 
+    }
+
+    this.removeAllEventListeners = function(){
+
+        for(var type in eventListenersDictionary)
+        {
+            if(eventListenersDictionary[type] !== null)
+            {
+                for (var i = eventListenersDictionary[type].length - 1; i >= 0; i -= 1) {
+
+                    var item = eventListenersDictionary[type][i];
+                    this.removeEventListener[type, item, item.useCapture];
+
+                }
+            }
+        }
     }
 
 });

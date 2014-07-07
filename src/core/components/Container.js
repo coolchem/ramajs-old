@@ -1,5 +1,6 @@
 $r.Class("Container").extends("Component")(function () {
 
+    this.skinClass = "$r.ContainerSkin";
     var _htmlContent = [];
     this.get("htmlContent", function () {
         return _htmlContent;

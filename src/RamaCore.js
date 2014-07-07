@@ -420,6 +420,8 @@ function trim( text ) {
             ( text + "" ).replace( rtrim, "" );
 }
 
+var supportsTouch = !!('ontouchstart' in window) || !!('msmaxtouchpoints' in window.navigator);
+
 function Observable(item){
 
     makeItemObservable.call(item);

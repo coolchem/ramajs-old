@@ -74,6 +74,27 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
 
     };
 
+    this.getItemRendererAtIndex= function(index){
+
+        return this.elements.getItemAt(index);
+    }
+
+    this.getItemRendererForItem = function(item){
+
+        if(_dataProvider)
+        {
+            this.elements.forEach(function(renderer){
+                if(renderer.data === item)
+                {
+                  return renderer;
+                }
+
+            })
+        }
+
+        return null;
+    }
+
     function setDataProviderFn() {
         if (this.initialized) {
             removeAllItemRenderers(this);
@@ -156,8 +177,6 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
             }
         }
 
-        event.stopImmediatePropagation();
-
         this.$$updateDisplay();
     }
 
@@ -193,7 +212,12 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
 
         var child = oldRenderer;
         if (child)
+        {
             this.removeElement(child);
+            var evt = new $r.DataGroupEvent($r.DataGroupEvent.ITEM_RENDERER_REMOVED, child, index);
+            this.dispatchEvent(evt);
+        }
+
     }
 
     function createRendererForItem(item) {
@@ -237,6 +261,8 @@ $r.Class("DataGroup").extends("GroupBase")(function () {
         var myItemRenderer = createRendererForItem(item);
         indexToRenderer.splice(index, 0, myItemRenderer);
         this.addElementAt(myItemRenderer, index);
+        var evt = new $r.DataGroupEvent($r.DataGroupEvent.ITEM_RENDERER_ADDED, myItemRenderer,index);
+        this.dispatchEvent(evt);
     }
 
     function adjustAfterAdd(items, location) {

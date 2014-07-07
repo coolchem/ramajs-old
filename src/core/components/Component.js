@@ -34,7 +34,7 @@ $r.Class("Component").extends("ComponentBase")(function () {
         if(_skinClass !== newValue)
         {
             _skinClass = newValue;
-            if(_skinClassSet)
+            if(_skinClassSet && this.initialized)
                 validateSkinChange();
         }
 
@@ -88,6 +88,16 @@ $r.Class("Component").extends("ComponentBase")(function () {
     this.partRemoved = function (partName, instance) {
         //Override this method to add functionality to various skin component
     };
+
+    this.hasState = function(stateName)
+    {
+       if(_skinElement)
+       {
+           return _skinElement.hasState(stateName);
+       }
+
+       return false;
+    }
 
     function validateSkinStateFn(){
 

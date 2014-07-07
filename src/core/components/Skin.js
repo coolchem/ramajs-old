@@ -29,7 +29,9 @@ $r.Class("Skin").extends("Group")(function () {
 
     this.init = function(skinClass){
         this.super.init();
-        compileHTMLNode(this, $r.skinFactory(skinClass));
+
+        this[0] = $r.skinFactory(skinClass)
+        compileHTMLNode(this,this[0]);
         this.setAttribute("comp", "Skin");
 
         $r.forEach(skinStates, function (state) {
@@ -44,6 +46,17 @@ $r.Class("Skin").extends("Group")(function () {
     this.getSkinPart = function (compId) {
 
         return _compiledElements[compId];
+    }
+
+    this.hasState = function(stateName)
+    {
+        for (var i = 0; i < skinStates.length; i++)
+        {
+            if (skinStates[i].name == stateName)
+                return true;
+        }
+        return false;
+
     }
 
     function createComponentFromNode(node){
@@ -173,24 +186,21 @@ $r.Class("Skin").extends("Group")(function () {
     function registerStateManagedComponents(component, attrName, attrValue){
         var nameAndState = attrName.split('.');
         var propertyName = $r.camelCase(nameAndState[0].toLowerCase());
-        if(typeof component[propertyName] !== "function")
+        if(nameAndState.length == 2)
         {
-            if(nameAndState.length == 2)
+            var stateName = nameAndState[1].toLowerCase();
+            if(stateManagedProperties[stateName] === undefined)
             {
-                var stateName = nameAndState[1].toLowerCase();
-                if(stateManagedProperties[stateName] === undefined)
-                {
-                    stateManagedProperties[stateName] = [];
-                }
-
-                var propertySetter = new $r.PropertySetter(component,propertyName,attrValue)
-
-                stateManagedProperties[stateName].push(propertySetter);
+                stateManagedProperties[stateName] = [];
             }
-            else
-            {
-                component[propertyName] =  attrValue;
-            }
+
+            var propertySetter = new $r.PropertySetter(component,propertyName,attrValue)
+
+            stateManagedProperties[stateName].push(propertySetter);
+        }
+        else
+        {
+            component[propertyName] =  attrValue;
         }
 
     }
@@ -273,7 +283,7 @@ $r.Class("Skin").extends("Group")(function () {
                 return skinStates[i];
         }
 
-        throw new ReferenceError("State not Found Exception: The state '" + value +
+        throw new ReferenceError("State not Found Exception: The state '" + stateName +
                 "' being set on the component is not found in the skin");
 
         return null;

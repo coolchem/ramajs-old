@@ -20,6 +20,12 @@ $r.LAYOUT = LAYOUT;
 $r.R_COMP = R_COMP;
 $r.Observable = Observable;
 $r.isFunction = isFunction;
+$r.supportsTouch = supportsTouch;
+
+//Core skins
+$r.skins({skinClass:"ContainerSkin",skin:"<div><div id='contentGroup'></div></div>"},
+        {skinClass:"ListSkin",skin:"<div><div id='dataGroup' comp='DataGroup'></div></div>"},
+        {skinClass:"ItemRendererSkin",skin:"<div></div>"})
 
 
 
