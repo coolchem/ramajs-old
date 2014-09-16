@@ -35,10 +35,20 @@ $r.Class("Skin").extends("Group")(function () {
         this.setAttribute("comp", "Skin");
 
         $r.forEach(skinStates, function (state) {
+
             if (stateManagedProperties.hasOwnProperty(state.name)) {
 
-                state.propertySetters = stateManagedProperties[state.name];
+                state.propertySetters.push.apply(state.propertySetters, stateManagedProperties[state.name]);
             }
+
+            $r.forEach(state.stateGroups, function(stateGroup){
+
+                if (stateManagedProperties.hasOwnProperty(stateGroup)) {
+
+                    state.propertySetters.push.apply(state.propertySetters, stateManagedProperties[stateGroup]);
+                }
+            })
+
 
         })
     }
@@ -109,7 +119,7 @@ $r.Class("Skin").extends("Group")(function () {
                             var stateNode = childNode.children[j];
                             if(stateNode.getAttribute("name") !== null && stateNode.getAttribute("name") !== undefined)
                             {
-                                var state = new $r.State(stateNode.getAttribute("name"), stateNode.getAttribute("stateGroups"));
+                                var state = new $r.State(stateNode.getAttribute("name"), stateNode.getAttribute("state_groups"));
                                 skinStates.push(state);
                             }
                         }

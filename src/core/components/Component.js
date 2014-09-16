@@ -99,6 +99,11 @@ $r.Class("Component").extends("ComponentBase")(function () {
        return false;
     }
 
+    this.getCurrentState = function(){
+
+
+    }
+
     function validateSkinStateFn(){
 
         if(_skinElement)

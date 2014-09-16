@@ -11,7 +11,7 @@ $r.Class("State").extends("EventDispatcher")(function () {
         return _name;
     });
 
-    var _stateGroups;
+    var _stateGroups = [];
     this.get('stateGroups', function(){
 
         return _stateGroups;
@@ -20,7 +20,14 @@ $r.Class("State").extends("EventDispatcher")(function () {
     this.init = function(name,stateGroups){
         this.super.init();
         _name = name;
-        _stateGroups = stateGroups;
+        if(typeof stateGroups === "string")
+        {
+            var tempStateGroups =  stateGroups.split(",");
+            $r.forEach(tempStateGroups, function(stateGroup){
+
+                _stateGroups.push($r.trim(stateGroup));
+            })
+        }
     }
 
     this.initialize = function(){

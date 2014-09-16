@@ -198,4 +198,24 @@ $r.Class("ComponentBase").extends("EventDispatcher")(function () {
 
     }
 
+    this.focus = function(){
+
+      if(arguments.length > 0 && arguments[0] === null)
+      {
+          this[0].blur();
+          return
+      }
+
+        this[0].focus();
+    }
+
+    this.validateState = function(){
+
+        if($r.isFunction(this.getCurrentState))
+        {
+            this.currentState = this.getCurrentState();
+        }
+
+    }
+
 })
